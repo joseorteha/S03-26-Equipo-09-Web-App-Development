@@ -49,9 +49,9 @@ export const DashboardLayout = () => {
             <div className="text-[11px] uppercase tracking-wider font-extrabold text-slate-400 mb-4 px-2">Módulos</div>
             <div className="space-y-1">
               <Link 
-                to="/dashboard" 
-                activeProps={{ className: "bg-[#006c49]/10 text-[#006c49] font-bold" }}
+                activeProps={{ className: "bg-[#006c49]/10 text-[#006c49] font-bold" }} 
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold transition-all hover:bg-[#f3f4f5]"
+                to="/dashboard"
               >     
                 <span className="material-symbols-outlined">space_dashboard</span> 
                 Resumen
@@ -76,7 +76,7 @@ export const DashboardLayout = () => {
 
             {/* BOTÓN SALIR */}
             <div className="mt-8 pt-4 border-t border-[#c6c6ce]/20">
-              <Link to="/" className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-all">
+              <Link className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-all" to="/">
                 <span className="material-symbols-outlined text-[20px]">logout</span> 
                 Cerrar Sesión
               </Link>

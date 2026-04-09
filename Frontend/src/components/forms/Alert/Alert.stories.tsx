@@ -15,7 +15,7 @@ export const Error: Story = {
     variant: 'error',
     title: 'Error de Autenticación',
     children: 'Las credenciales ingresadas no coinciden con nuestros registros. Por favor, verifica e intenta de nuevo.',
-    onClose: () => alert('Cerrado'),
+    onClose: () => { alert('Cerrado'); },
   },
 };
 

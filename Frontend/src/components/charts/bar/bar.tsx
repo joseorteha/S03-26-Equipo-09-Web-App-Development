@@ -1,23 +1,28 @@
 import { ResponsiveBar } from '@nivo/bar';
 
 interface BarChartProps {
-  data: any[];
+  data: Array<any>;
 }
 
 export const BarChart = ({ data }: BarChartProps) => (
   <ResponsiveBar
+    ariaLabel="Gráfico de fuentes de leads"
+    axisRight={null}
+    axisTop={null}
+    borderColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+    borderRadius={8}
+    colors={['#008f60']} // Esmeralda Corporativo
     data={data}
-    keys={['leads']}
     indexBy="fuente"
+    indexScale={{ type: 'band', round: true }}
+    keys={['leads']}
+    labelSkipHeight={12}
+    labelSkipWidth={12}
+    labelTextColor="#ffffff"
     margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
     padding={0.3}
+    role="application"
     valueScale={{ type: 'linear' }}
-    indexScale={{ type: 'band', round: true }}
-    colors={['#008f60']} // Esmeralda Corporativo
-    borderRadius={8}
-    borderColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
-    axisTop={null}
-    axisRight={null}
     axisBottom={{
       tickSize: 5,
       tickPadding: 5,
@@ -26,9 +31,6 @@ export const BarChart = ({ data }: BarChartProps) => (
       legendPosition: 'middle',
       legendOffset: 32
     }}
-    labelSkipWidth={12}
-    labelSkipHeight={12}
-    labelTextColor="#ffffff"
     theme={{
       axis: {
         legend: {
@@ -42,7 +44,5 @@ export const BarChart = ({ data }: BarChartProps) => (
         line: { stroke: '#f1f5f9', strokeWidth: 1 }
       }
     }}
-    role="application"
-    ariaLabel="Gráfico de fuentes de leads"
   />
 );

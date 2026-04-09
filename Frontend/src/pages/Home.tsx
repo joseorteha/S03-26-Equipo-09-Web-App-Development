@@ -2,7 +2,8 @@ import React, { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from '@tanstack/react-router';
-import { loginSchema, LoginFormValues } from '../features/auth/schemas/loginSchema';
+import type { LoginFormValues } from '../features/auth/schemas/loginSchema';
+import { loginSchema } from '../features/auth/schemas/loginSchema';
 
 export const Home = () => {
   const [isLoginView, setIsLoginView] = useState(true);
@@ -45,21 +46,21 @@ export const Home = () => {
           {/* Menú Desktop - Centrado/Derecha */}
           <div className="hidden lg:flex items-center gap-10">
             <div className="flex gap-8 text-sm font-semibold text-[#45464e]">
-              <a href="#" className="hover:text-[#006c49] transition-colors">Soluciones</a>
-              <a href="#" className="hover:text-[#006c49] transition-colors">Precios</a>
-              <a href="#" className="hover:text-[#006c49] transition-colors">Acerca de</a>
-              <a href="#" className="hover:text-[#006c49] transition-colors">Soporte</a>
+              <a className="hover:text-[#006c49] transition-colors" href="#">Soluciones</a>
+              <a className="hover:text-[#006c49] transition-colors" href="#">Precios</a>
+              <a className="hover:text-[#006c49] transition-colors" href="#">Acerca de</a>
+              <a className="hover:text-[#006c49] transition-colors" href="#">Soporte</a>
             </div>
             
             <div className="flex items-center gap-4 border-l pl-8 border-slate-200">
              <button 
-              onClick={() => handleSwitchView(true)}
-              className="text-sm font-bold text-[#45464e] hover:text-[#006c49] transition-colors">
+              className="text-sm font-bold text-[#45464e] hover:text-[#006c49] transition-colors"
+              onClick={() => { handleSwitchView(true); }}>
               Iniciar Sesión
             </button>
               <button 
-                onClick={() => handleSwitchView(false)}
                 className="bg-[#182442] text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg hover:bg-[#25335a] transition-all"
+                onClick={() => { handleSwitchView(false); }}
               >
                 Registrarme
               </button>
@@ -67,7 +68,7 @@ export const Home = () => {
           </div>
 
           {/* Icono Menú Móvil */}
-          <button className="lg:hidden p-2" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+          <button className="lg:hidden p-2" onClick={() => { setIsMobileMenuOpen(!isMobileMenuOpen); }}>
             <span className="material-symbols-outlined text-[#182442]">
               {isMobileMenuOpen ? 'close' : 'menu'}
             </span>
@@ -80,25 +81,25 @@ export const Home = () => {
             
             {/* Botón Iniciar Sesión: Ahora parece un botón real */}
             <button 
-                onClick={() => handleSwitchView(true)} 
                 className="w-full text-center py-2.5 px-4 rounded-lg font-bold text-sm text-
-                bg-[#008f60] hover:bg-[#00a36e] shadow-green-900/20-[#006c49]/5 active:bg-[#006c49]/10 transition-all">
+                bg-[#008f60] hover:bg-[#00a36e] shadow-green-900/20-[#006c49]/5 active:bg-[#006c49]/10 transition-all" 
+                onClick={() => { handleSwitchView(true); }}>
                 Iniciar Sesión
            </button>
 
             {/* Botón Registrarme: Tamaño reducido */}
             <button 
-              onClick={() => handleSwitchView(false)} 
-              className="w-full bg-[#182442] text-white py-2.5 px-4 rounded-lg font-bold text-sm text-center shadow-md active:scale-[0.98] transition-all"
+              className="w-full bg-[#182442] text-white py-2.5 px-4 rounded-lg font-bold text-sm text-center shadow-md active:scale-[0.98] transition-all" 
+              onClick={() => { handleSwitchView(false); }}
             >
               Registrarme
             </button>
 
             {/* Links adicionales opcionales (Soluciones, Precios) en tamaño pequeño */}
             <div className="flex justify-around mt-2 pt-2 border-t border-slate-100">
-              <a href="#" className="text-[11px] font-bold text-[#006c49] uppercase tracking-wider">Soluciones</a>
-              <a href="#" className="text-[11px] font-bold text-[#45464e] uppercase tracking-wider">Precios</a>
-              <a href="#" className="text-[11px] font-bold text-[#45464e] uppercase tracking-wider">Soporte</a>
+              <a className="text-[11px] font-bold text-[#006c49] uppercase tracking-wider" href="#">Soluciones</a>
+              <a className="text-[11px] font-bold text-[#45464e] uppercase tracking-wider" href="#">Precios</a>
+              <a className="text-[11px] font-bold text-[#45464e] uppercase tracking-wider" href="#">Soporte</a>
             </div>
           </div>
         )}
@@ -110,7 +111,7 @@ export const Home = () => {
           
           {/* Columna Texto */}
           <div className="flex flex-col gap-8 text-center lg:text-left">
-            <img src="/img/logo.webp" alt="Logo" className="h-48 w-fit mx-auto lg:mx-0 drop-shadow-md" />
+            <img alt="Logo" className="h-48 w-fit mx-auto lg:mx-0 drop-shadow-md" src="/img/logo.webp" />
             
             <h1 className="text-4xl lg:text-[3.8rem] leading-[1.05] font-medium tracking-tight text-[#182442]">
               Centraliza tus ventas de <span className="text-[#006c49]">WhatsApp</span> y Email en un solo lugar
@@ -127,8 +128,8 @@ export const Home = () => {
                 <span className="text-[10px] uppercase tracking-widest text-[#45464e] font-black">Eficiencia</span>
               </div>
               <div className="flex -space-x-3">
-                {[1, 2, 3].map(i => (
-                  <img key={i} src={`https://i.pravatar.cc/100?u=${i}`} className="w-11 h-11 rounded-full border-2 border-white shadow-sm" alt="user" />
+                {[1, 2, 3].map(index => (
+                  <img key={index} alt="user" className="w-11 h-11 rounded-full border-2 border-white shadow-sm" src={`https://i.pravatar.cc/100?u=${index}`} />
                 ))}
                 <div className="w-11 h-11 rounded-full border-2 border-white bg-[#edeeef] flex items-center justify-center text-[10px] font-bold text-[#182442] shadow-sm">
                   +12k
@@ -147,7 +148,7 @@ export const Home = () => {
               </h2>
               <p className="text-[#45464e] text-sm mb-8">Accede a tu panel y gestiona tus leads.</p>
 
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
                 <div className="space-y-2">
                   <label className="text-[11px] uppercase tracking-widest font-bold text-[#45464e] ml-1">Correo Corporativo</label>
                   <input 
@@ -161,9 +162,9 @@ export const Home = () => {
                   <label className="text-[11px] uppercase tracking-widest font-bold text-[#45464e] ml-1">Contraseña</label>
                   <input 
                     {...register('password')}
-                    type="password"
                     className="w-full bg-[#f3f4f5] border border-slate-200 rounded-2xl px-5 py-4 text-sm focus:bg-white focus:border-[#006c49] outline-none transition-all"
-                    placeholder="••••••••" 
+                    placeholder="••••••••"
+                    type="password" 
                   />
                 </div>
 
@@ -180,7 +181,7 @@ export const Home = () => {
               </form>
 
               <div className="mt-8 text-center pt-6 border-t border-slate-50">
-                <button onClick={() => setIsLoginView(!isLoginView)} className="text-xs text-[#45464e]">
+                <button className="text-xs text-[#45464e]" onClick={() => { setIsLoginView(!isLoginView); }}>
                   {isLoginView ? '¿Eres nuevo?' : '¿Ya tienes cuenta?'} 
                   <span className="text-[#006c49] font-bold ml-1 hover:underline underline-offset-4">
                     {isLoginView ? 'Registra tu empresa aquí' : 'Inicia sesión'}
@@ -200,9 +201,9 @@ export const Home = () => {
             <p className="text-[10px] text-[#45464e] font-medium uppercase tracking-widest mt-1">© 2026 Global Smart Sync Solutions. Cartago, Valle.</p>
           </div>
           <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-[#45464e]">
-            <a href="#" className="hover:text-[#006c49]">Privacidad</a>
-            <a href="#" className="hover:text-[#006c49]">Términos</a>
-            <a href="#" className="hover:text-[#006c49]">Contacto</a>
+            <a className="hover:text-[#006c49]" href="#">Privacidad</a>
+            <a className="hover:text-[#006c49]" href="#">Términos</a>
+            <a className="hover:text-[#006c49]" href="#">Contacto</a>
           </div>
         </div>
       </footer>

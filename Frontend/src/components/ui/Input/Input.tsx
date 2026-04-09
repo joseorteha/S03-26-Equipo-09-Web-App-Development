@@ -1,4 +1,5 @@
-import React, { forwardRef } from 'react';
+import type React from 'react';
+import { forwardRef } from 'react';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -22,7 +23,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
   return (
     <div className="flex flex-col gap-1.5 w-full">
       {label && (
-        <label htmlFor={props.id} className="text-sm font-medium text-slate-700">
+        <label className="text-sm font-medium text-slate-700" htmlFor={props.id}>
           {label}
         </label>
       )}
@@ -36,8 +37,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
         
         <input
           ref={ref}
-          aria-invalid={error ? 'true' : 'false'}
           aria-describedby={error ? errorId : undefined}
+          aria-invalid={error ? 'true' : 'false'}
           className={`
             w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm transition-all
             placeholder:text-slate-400
@@ -52,7 +53,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
       </div>
 
       {error && (
-        <p id={errorId} role="alert" className="text-xs text-red-500 mt-1">
+        <p className="text-xs text-red-500 mt-1" id={errorId} role="alert">
           {error}
         </p>
       )}
