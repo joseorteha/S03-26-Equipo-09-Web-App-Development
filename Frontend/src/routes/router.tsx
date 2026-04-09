@@ -1,7 +1,9 @@
 import { createRouter, Outlet, createRoute, createRootRoute } from '@tanstack/react-router';
 import { Home } from '../pages/Home';
+import { Login } from '../pages/Login';
+import { Register } from '../pages/Register';
 import { DashboardPage } from '../pages/Dashboard';
-import { DashboardLayout } from '../components/layout/DashboardLayout'; // Importas tu nuevo layout
+import { DashboardLayout } from '../components/layout/DashboardLayout';
 
 const rootRoute = createRootRoute({
   component: () => <Outlet />,
@@ -10,14 +12,25 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: Home, // La Home usa su propio diseño interno
+  component: Home,
 });
 
-// Definimos la ruta del Layout del Dashboard
+const loginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/login',
+  component: Login,
+});
+
+const registerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/register',
+  component: Register,
+});
+
 const dashboardLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: 'dashboard-layout',
-  component: DashboardLayout, // <--- USAMOS EL COMPONENTE DE TU CARPETA LAYOUT
+  component: DashboardLayout,
 });
 
 const dashboardIndexRoute = createRoute({
@@ -28,6 +41,8 @@ const dashboardIndexRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
+  loginRoute,
+  registerRoute,
   dashboardLayoutRoute.addChildren([dashboardIndexRoute]),
 ]);
 

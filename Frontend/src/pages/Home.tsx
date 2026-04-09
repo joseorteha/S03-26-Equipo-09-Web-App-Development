@@ -1,35 +1,10 @@
-import React, { useState, useRef } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useState, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import type { LoginFormValues } from '../features/auth/schemas/loginSchema';
-import { loginSchema } from '../features/auth/schemas/loginSchema';
 
 export const Home = () => {
-  const [isLoginView, setIsLoginView] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const authCardRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-
-  const { register, handleSubmit, formState: { errors },isSubmitting } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-  });
-
-  const scrollToAuth = () => {
-    authCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    setIsMobileMenuOpen(false);
-  };
-
-  const handleSwitchView = (isLogin: boolean) => {
-    setIsLoginView(isLogin);
-    if (window.innerWidth < 1024) {
-      setTimeout(scrollToAuth, 100);
-    }
-  };
-
-  const onSubmit = (data: LoginFormValues) => {
-    navigate({ to: '/dashboard' });
-  };
 
   return (
     <div className="bg-[#f8f9fa] font-body text-[#191c1d] antialiased min-h-screen flex flex-col">
@@ -55,13 +30,12 @@ export const Home = () => {
             <div className="flex items-center gap-4 border-l pl-8 border-slate-200">
              <button 
               className="text-sm font-bold text-[#45464e] hover:text-[#006c49] transition-colors"
-              onClick={() => { handleSwitchView(true); }}>
+              onClick={() => navigate({ to: '/login' })}>
               Iniciar Sesión
             </button>
               <button 
                 className="bg-[#182442] text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg hover:bg-[#25335a] transition-all"
-                onClick={() => { handleSwitchView(false); }}
-              >
+                onClick={() => navigate({ to: '/register' })}>
                 Registrarme
               </button>
             </div>
@@ -81,16 +55,15 @@ export const Home = () => {
             
             {/* Botón Iniciar Sesión: Ahora parece un botón real */}
             <button 
-                className="w-full text-center py-2.5 px-4 rounded-lg font-bold text-sm text-
-                bg-[#008f60] hover:bg-[#00a36e] shadow-green-900/20-[#006c49]/5 active:bg-[#006c49]/10 transition-all" 
-                onClick={() => { handleSwitchView(true); }}>
+                className="w-full text-center py-2.5 px-4 rounded-lg font-bold text-sm text-white bg-[#008f60] hover:bg-[#00a36e] shadow-lg active:bg-[#006c49] transition-all" 
+                onClick={() => { navigate({ to: '/login' }); setIsMobileMenuOpen(false); }}>
                 Iniciar Sesión
            </button>
 
             {/* Botón Registrarme: Tamaño reducido */}
             <button 
               className="w-full bg-[#182442] text-white py-2.5 px-4 rounded-lg font-bold text-sm text-center shadow-md active:scale-[0.98] transition-all" 
-              onClick={() => { handleSwitchView(false); }}
+              onClick={() => { navigate({ to: '/register' }); setIsMobileMenuOpen(false); }}
             >
               Registrarme
             </button>
@@ -138,55 +111,39 @@ export const Home = () => {
             </div>
           </div>
 
-          {/* Columna Formulario */}
-          <div ref={authCardRef} className="w-full max-w-md mx-auto lg:mr-0">
-            <div className="bg-white rounded-[2rem] p-10 shadow-[0_25px_50px_-12px_rgba(24,36,66,0.15)] border border-slate-100 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-[#006c49]"></div>
+          {/* Columna CTA - Únete Ahora */}
+          <div ref={authCardRef} className="w-full max-w-md mx-auto lg:mr-0 flex flex-col gap-6">
+            <div className="bg-gradient-to-br from-[#006c49] to-[#005a3d] rounded-[2rem] p-10 shadow-[0_25px_50px_-12px_rgba(0,108,73,0.3)] border border-[#008f60]/30 text-white">
+              <h2 className="text-2xl font-bold mb-2">Listo para activar</h2>
+              <p className="text-sm text-white/90 mb-8">
+                Integra WhatsApp y Email en minutos. Sin instalaciones complicadas.
+              </p>
               
-              <h2 className="text-2xl font-bold text-[#182442] mb-1">
-                {isLoginView ? 'Inicia sesión' : 'Crea tu cuenta'}
-              </h2>
-              <p className="text-[#45464e] text-sm mb-8">Accede a tu panel y gestiona tus leads.</p>
+              <button 
+                onClick={() => navigate({ to: '/login' })}
+                className="w-full py-3 bg-white text-[#006c49] rounded-lg font-bold text-sm shadow-lg hover:bg-slate-50 transition-all active:scale-[0.98]"
+              >
+                Iniciar Sesión
+              </button>
 
-              <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
-                <div className="space-y-2">
-                  <label className="text-[11px] uppercase tracking-widest font-bold text-[#45464e] ml-1">Correo Corporativo</label>
-                  <input 
-                    {...register('email')}
-                    className="w-full bg-[#f3f4f5] border border-slate-200 rounded-2xl px-5 py-4 text-sm focus:bg-white focus:border-[#006c49] outline-none transition-all"
-                    placeholder="nombre@empresa.com" 
-                  />
-                </div>
+              <p className="text-xs text-white/70 text-center mt-6">
+                Prueba gratuita. Cancela en cualquier momento.
+              </p>
+            </div>
 
-                <div className="space-y-2">
-                  <label className="text-[11px] uppercase tracking-widest font-bold text-[#45464e] ml-1">Contraseña</label>
-                  <input 
-                    {...register('password')}
-                    className="w-full bg-[#f3f4f5] border border-slate-200 rounded-2xl px-5 py-4 text-sm focus:bg-white focus:border-[#006c49] outline-none transition-all"
-                    placeholder="••••••••"
-                    type="password" 
-                  />
-                </div>
-
-               <button 
-  disabled={isSubmitting}
-  className={`w-full py-5 rounded-2xl font-bold text-sm shadow-xl transition-all active:scale-[0.98] mt-4 disabled:opacity-70 text-white ${
-    isLoginView 
-      ? 'bg-[#006c49] hover:bg-[#005a3d] shadow-green-900/10' // Verde si es Login
-      : 'bg-[#182442] hover:bg-[#25335a] shadow-blue-900/10'  // Azul si es Registro
-  }`}
->
-  {isSubmitting ? 'Cargando...' : isLoginView ? 'Entrar al Panel' : 'Registrar Empresa'}
-</button>
-              </form>
-
-              <div className="mt-8 text-center pt-6 border-t border-slate-50">
-                <button className="text-xs text-[#45464e]" onClick={() => { setIsLoginView(!isLoginView); }}>
-                  {isLoginView ? '¿Eres nuevo?' : '¿Ya tienes cuenta?'} 
-                  <span className="text-[#006c49] font-bold ml-1 hover:underline underline-offset-4">
-                    {isLoginView ? 'Registra tu empresa aquí' : 'Inicia sesión'}
-                  </span>
-                </button>
+            {/* Card de Características */}
+            <div className="bg-white rounded-[1.5rem] p-6 shadow-lg border border-slate-100 space-y-4">
+              <div className="flex gap-3">
+                <span className="material-symbols-outlined text-[#006c49] flex-shrink-0">check_circle</span>
+                <p className="text-sm font-semibold text-slate-900">Soporte 24/7</p>
+              </div>
+              <div className="flex gap-3">
+                <span className="material-symbols-outlined text-[#006c49] flex-shrink-0">check_circle</span>
+                <p className="text-sm font-semibold text-slate-900">Datos cifrados</p>
+              </div>
+              <div className="flex gap-3">
+                <span className="material-symbols-outlined text-[#006c49] flex-shrink-0">check_circle</span>
+                <p className="text-sm font-semibold text-slate-900">GDPR Compliant</p>
               </div>
             </div>
           </div>
