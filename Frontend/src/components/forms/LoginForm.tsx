@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Input } from '../../../components/ui/Input';
-import { Button } from '../../../components/ui/Button';
-import { Alert } from '../../../components/forms/Alert';
+import { Input } from '../ui/Input/Input';
+import { Button } from '../ui/Button';
+import { Alert } from './Alert';
 
 
 // 1. Definimos el esquema de validación con Zod
