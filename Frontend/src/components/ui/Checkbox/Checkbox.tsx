@@ -19,9 +19,9 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
         <div className="flex items-center gap-3">
           <input
             ref={ref}
-            type="checkbox"
             aria-describedby={error ? errorId : undefined}
             aria-invalid={error ? 'true' : 'false'}
+            type="checkbox"
             className={`
               w-5 h-5 rounded border border-slate-300 bg-white cursor-pointer
               accent-[#008f60]
@@ -34,15 +34,15 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           />
           {label && (
             <label
-              htmlFor={props.id}
               className="text-sm font-medium text-slate-700 cursor-pointer"
+              htmlFor={props.id}
             >
               {label}
             </label>
           )}
         </div>
         {error && (
-          <p id={errorId} className="text-xs text-red-500 font-medium">
+          <p className="text-xs text-red-500 font-medium" id={errorId}>
             {error}
           </p>
         )}
