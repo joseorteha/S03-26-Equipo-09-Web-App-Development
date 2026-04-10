@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Input } from '../../../components/ui/Input';
-import { Button } from '../../../components/ui/Button';
-import { Alert } from '../../../components/forms/Alert';
+import { Input } from '../ui/Input/Input';
+import { Button } from '../ui/Button';
+import { Alert } from './Alert';
 
 
 // 1. Definimos el esquema de validación con Zod
@@ -45,37 +45,37 @@ export const LoginForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 w-full max-w-sm">
+    <form className="space-y-6 w-full max-w-sm" onSubmit={handleSubmit(onSubmit)}>
       {/* Mensaje de Error Global (Server Error) */}
       {serverError && (
-        <Alert variant="error" title="Error de Acceso" onClose={() => setServerError(null)}>
+        <Alert title="Error de Acceso" variant="error" onClose={() => { setServerError(null); }}>
           {serverError}
         </Alert>
       )}
 
       <div className="space-y-4">
         <Input
+          icon="mail"
           label="Correo Corporativo"
           placeholder="usuario@empresa.com"
-          icon="mail"
           {...register('email')}
           error={errors.email?.message} // Vinculación del error de validación
         />
 
         <Input
-          label="Contraseña"
-          type="password"
-          placeholder="••••••••"
           icon="lock"
+          label="Contraseña"
+          placeholder="••••••••"
+          type="password"
           {...register('password')}
           error={errors.password?.message} // Vinculación del error de validación
         />
       </div>
 
       <Button 
-        type="submit" 
         className="w-full" 
-        isLoading={isLoading}
+        isLoading={isLoading} 
+        type="submit"
         variant="primary"
       >
         Iniciar Sesión

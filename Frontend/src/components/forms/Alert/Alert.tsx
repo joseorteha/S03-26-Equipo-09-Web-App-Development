@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 export interface AlertProps {
   variant?: 'success' | 'error' | 'warning' | 'info';
@@ -33,8 +33,8 @@ export const Alert = ({
 
   return (
     <div
-      role="alert"
       className={`relative flex w-full gap-4 p-4 border rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300 ${variants[variant]} ${className}`}
+      role="alert"
     >
       <span className="material-symbols-outlined shrink-0" style={{ fontSize: '24px' }}>
         {icon || defaultIcons[variant]}
@@ -47,9 +47,9 @@ export const Alert = ({
 
       {onClose && (
         <button
-          onClick={onClose}
-          className="p-1 rounded-lg hover:bg-black/5 transition-colors shrink-0"
           aria-label="Cerrar alerta"
+          className="p-1 rounded-lg hover:bg-black/5 transition-colors shrink-0"
+          onClick={onClose}
         >
           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span>
         </button>

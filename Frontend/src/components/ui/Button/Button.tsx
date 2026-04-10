@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'tertiary' | 'outline';
@@ -40,19 +40,19 @@ export const Button = ({
 
   return (
     <button 
-      type={type}
-      className={combinedClassName} 
+      className={combinedClassName}
       disabled={disabled || isLoading} 
+      type={type} 
       {...props}
     >
       {isLoading ? (
         <div 
-          role="status"
           aria-label="loading"
-          className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" 
+          className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"
+          role="status" 
         />
       ) : icon ? (
-        <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+        <span aria-hidden="true" className="material-symbols-outlined text-[20px]">
           {icon}
         </span>
       ) : null}

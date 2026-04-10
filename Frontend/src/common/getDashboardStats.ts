@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { DashboardStats } from '../types';
-import { ApiResponse } from '../../../common/types';
+import type { DashboardStats } from './index';
+import type { ApiResponse } from './types';
 
 // Nota: Asumiendo que existe una instancia de API configurada (ej. axios o fetch wrapper)
 const fetchDashboardStats = async (): Promise<DashboardStats> => {
   const response = await fetch('/api/dashboard/stats');
-  const result: ApiResponse<DashboardStats> = await response.json();
+  const result = (await response.json()) as ApiResponse<DashboardStats>;
   return result.data;
 };
 

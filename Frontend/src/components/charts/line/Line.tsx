@@ -1,18 +1,27 @@
 import { ResponsiveLine } from '@nivo/line';
 
 interface LineChartProps {
-  data: any[];
+  data: Array<any>;
 }
 
 export const LineChart = ({ data }: LineChartProps) => (
   <ResponsiveLine
+    enableArea
+    useMesh
+    areaOpacity={0.1}
+    axisRight={null}
+    axisTop={null}
+    colors={['#182442']} // Indigo Corporativo
+    curve="catmullRom"
     data={data}
     margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
+    pointBorderColor={{ from: 'serieColor' }}
+    pointBorderWidth={2}
+    pointColor={{ theme: 'background' }}
+    pointLabelYOffset={-12}
+    pointSize={10}
     xScale={{ type: 'point' }}
     yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: false, reverse: false }}
-    curve="catmullRom"
-    axisTop={null}
-    axisRight={null}
     axisBottom={{
       tickSize: 5,
       tickPadding: 5,
@@ -29,15 +38,6 @@ export const LineChart = ({ data }: LineChartProps) => (
       legendOffset: -50,
       legendPosition: 'middle'
     }}
-    colors={['#182442']} // Indigo Corporativo
-    pointSize={10}
-    pointColor={{ theme: 'background' }}
-    pointBorderWidth={2}
-    pointBorderColor={{ from: 'serieColor' }}
-    pointLabelYOffset={-12}
-    useMesh={true}
-    enableArea={true}
-    areaOpacity={0.1}
     theme={{
       axis: {
         legend: {

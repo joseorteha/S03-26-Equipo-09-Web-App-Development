@@ -1,4 +1,4 @@
-import React from 'react';
+
 import type { Meta, StoryObj } from '@storybook/react';
 import { Modal } from './Modal';
 import { Button } from '../Button/Button';
@@ -16,7 +16,7 @@ export const Default: Story = {
   args: {
     isOpen: true,
     title: 'Confirmar Asignación',
-    onClose: () => console.log('Close clicked'),
+    onClose: () => { console.log('Close clicked'); },
     children: (
       <div className="space-y-4">
         <p>¿Estás seguro de que deseas asignar este lead a <strong>José Rivera</strong>?</p>

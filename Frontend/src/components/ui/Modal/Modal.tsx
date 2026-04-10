@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 export interface ModalProps {
@@ -33,17 +33,17 @@ export const Modal = ({
 
   return createPortal(
     <div 
+      aria-labelledby="modal-title"
+      aria-modal="true"
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-title"
     >
       {/* Backdrop con Glassmorphism corporativo */}
       <div 
-        className="absolute inset-0 bg-[#182442]/40 backdrop-blur-md transition-opacity animate-in fade-in duration-300"
-        onClick={onClose}
         aria-hidden="true"
+        className="absolute inset-0 bg-[#182442]/40 backdrop-blur-md transition-opacity animate-in fade-in duration-300"
         data-testid="modal-backdrop"
+        onClick={onClose}
       />
       
       {/* Modal Content container */}
@@ -53,13 +53,13 @@ export const Modal = ({
         
         <div className="p-8">
           <div className="flex justify-between items-center mb-6">
-            <h3 id="modal-title" className="text-xl font-bold text-[#182442] tracking-tight">
+            <h3 className="text-xl font-bold text-[#182442] tracking-tight" id="modal-title">
               {title}
             </h3>
             <button 
-              onClick={onClose} 
+              aria-label="Cerrar modal" 
               className="p-2 hover:bg-slate-50 rounded-full transition-colors group"
-              aria-label="Cerrar modal"
+              onClick={onClose}
             >
               <span className="material-symbols-outlined text-slate-400 group-hover:text-[#182442] transition-colors">
                 close

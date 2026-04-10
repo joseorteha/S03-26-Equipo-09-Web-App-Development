@@ -1,5 +1,8 @@
-import React, { useState } from 'react'; 
-import { MOCK_DASHBOARD_STATS } from '../features/dashboard/mocks/dashboardData';
+import { useState, useMemo } from 'react'; 
+import { dashboardMockData, MOCK_DASHBOARD_STATS } from '../features/dashboard/mocks/dashboardData';
+import { LineChart } from '../components/charts/line/Line';
+import { BarChart } from '../components/charts/bar/bar';
+import { PieChart } from '../components/charts/pie/pie';
 import { Card } from '../components/ui/Card/Card';
 import { Badge } from '../components/ui/Badge/Badge';
 import { Button } from '../components/ui/Button/Button';
@@ -7,7 +10,30 @@ import { Modal } from '../components/ui/Modal/Modal';
 
 export const DashboardPage = () => {
   const stats = MOCK_DASHBOARD_STATS;
-  const [isDevModalOpen, setIsDevModalOpen] = useState(false);
+  const [isDevelopmentModalOpen, setIsDevelopmentModalOpen] = useState(false);
+
+  /**
+   * Transforma datos mockados al formato esperado por Nivo
+   */
+  const chartData = useMemo(() => {
+    return {
+      lineData: [
+        {
+          id: 'Ingresos',
+          data: dashboardMockData.revenue.map(item => ({
+            x: item.month,
+            y: item.ingresos
+          }))
+        }
+      ],
+      pieData: dashboardMockData.leadsByStatus.map(item => ({
+        id: item.estado,
+        label: item.estado,
+        value: item.cantidad
+      })),
+      barData: dashboardMockData.sources
+    };
+  }, []);
 
   // SOLO UN RETURN QUE ENCAPSULA TODO
   return (
@@ -38,8 +64,8 @@ export const DashboardPage = () => {
                   <p className="text-xs text-on-surface-variant italic">Estado de la conexión</p>
                 </div>
               </div>
-                  <button onClick={() => setIsDevModalOpen(true)} 
-                  className="text-xs font-bold text-secondary hover:underline transition-all">Vincular mi cuenta</button>
+                  <button className="text-xs font-bold text-secondary hover:underline transition-all" 
+                  onClick={() => { setIsDevelopmentModalOpen(true); }}>Vincular mi cuenta</button>
           </div>
             <div className="bg-surface-container-low p-3 rounded-xl flex justify-between items-center border border-outline-variant/10">
               <span className="text-sm font-medium text-primary">Instancia: Activa</span>
@@ -58,8 +84,8 @@ export const DashboardPage = () => {
                   <p className="text-xs text-on-surface-variant">Marketing & Notificaciones</p>
                 </div>
               </div>
-                <button onClick={() => setIsDevModalOpen(true)} 
-                className="text-xs font-bold text-secondary hover:underline transition-all">Conectar correo</button>
+                <button className="text-xs font-bold text-secondary hover:underline transition-all" 
+                onClick={() => { setIsDevelopmentModalOpen(true); }}>Conectar correo</button>
           </div>
 
               <div className="bg-surface-container-low p-3 rounded-xl flex justify-between items-center">
@@ -70,7 +96,7 @@ export const DashboardPage = () => {
       </section>
 
       {/* 3. KPIs Principales */}
-      <Card variant="dark" className="p-8">
+      <Card className="p-8" variant="dark">
         <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center sm:text-left">
           <div>
             <p className="text-white/60 text-xs font-bold uppercase tracking-widest">Contactos Totales</p>
@@ -92,36 +118,72 @@ export const DashboardPage = () => {
 
       {/* 4. Acciones Rápidas */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Button variant="outline" icon="person_add" className="flex-col h-28" onClick={() => setIsDevModalOpen(true)}>
+        <Button className="flex-col h-28" icon="person_add" variant="outline" onClick={() => { setIsDevelopmentModalOpen(true); }}>
           <span className="text-sm font-bold text-primary">Añadir Vendedor</span>
         </Button>
 
-        <Button variant="outline" icon="database" className="flex-col h-28" onClick={() => setIsDevModalOpen(true)}>
+        <Button className="flex-col h-28" icon="database" variant="outline" onClick={() => { setIsDevelopmentModalOpen(true); }}>
           <span className="text-sm font-bold text-primary">Exportar Leads</span>
         </Button>
 
-        <Button variant="outline" icon="settings" className="flex-col h-28" onClick={() => setIsDevModalOpen(true)}>
+        <Button className="flex-col h-28" icon="settings" variant="outline" onClick={() => { setIsDevelopmentModalOpen(true); }}>
           <span className="text-sm font-bold text-primary">Ajustes</span>
         </Button>
       </section>
 
       {/* 5. Espacio para Gráficos */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="h-80 flex flex-col justify-center items-center border-dashed border-2">
-            <span className="material-symbols-outlined text-outline-variant text-4xl mb-2">monitoring</span>
-            <p className="text-on-surface-variant font-medium">Gráfico: Distribución de Leads</p>
+        {/* Chart: Línea (Ingresos Mensual) */}
+        <Card as="article" className="p-6 flex flex-col">
+          <div className="mb-4">
+            <h2 className="text-lg font-bold text-primary">
+              Ingresos Mensual
+            </h2>
+            <p className="text-sm text-on-surface-variant mt-1">
+              Tendencia de ingresos (últimos 6 meses)
+            </p>
+          </div>
+          <div className="flex-grow" style={{ minHeight: '300px' }}>
+            <LineChart data={chartData.lineData} />
+          </div>
         </Card>
-        <Card className="h-80 flex flex-col justify-center items-center border-dashed border-2">
-            <span className="material-symbols-outlined text-outline-variant text-4xl mb-2">show_chart</span>
-            <p className="text-on-surface-variant font-medium">Gráfico: Rendimiento Mensual</p>
+
+        {/* Chart: Pie (Distribución de Leads) */}
+        <Card as="article" className="p-6 flex flex-col">
+          <div className="mb-4">
+            <h2 className="text-lg font-bold text-primary">
+              Distribución de Leads
+            </h2>
+            <p className="text-sm text-on-surface-variant mt-1">
+              Por estado del pipeline
+            </p>
+          </div>
+          <div className="flex-grow" style={{ minHeight: '300px' }}>
+            <PieChart data={chartData.pieData} />
+          </div>
         </Card>
       </section>
 
+      {/* Chart: Bar (Leads por Fuente) - Full Width */}
+      <Card as="article" className="p-6 flex flex-col">
+        <div className="mb-4">
+          <h2 className="text-lg font-bold text-primary">
+            Leads por Fuente
+          </h2>
+          <p className="text-sm text-on-surface-variant mt-1">
+            Rendimiento de canales de adquisición
+          </p>
+        </div>
+        <div style={{ minHeight: '320px' }}>
+          <BarChart data={chartData.barData} />
+        </div>
+      </Card>
+
       {/* MODAL (Invisible hasta que se activa el estado) */}
       <Modal 
-        isOpen={isDevModalOpen} 
-        onClose={() => setIsDevModalOpen(false)}
+        isOpen={isDevelopmentModalOpen} 
         title="¡En Construcción!"
+        onClose={() => { setIsDevelopmentModalOpen(false); }}
       >
         <p className="text-on-surface-variant text-sm">
           Esta función estará disponible en la próxima etapa de desarrollo.
