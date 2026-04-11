@@ -56,12 +56,41 @@ export const DashboardLayout = () => {
                 <span className="material-symbols-outlined">space_dashboard</span> 
                 Resumen
               </Link>
-              <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-[#182442] hover:bg-[#f3f4f5] transition-all">
-                <span className="material-symbols-outlined">inbox</span> Inbox Unificado
-              </button>
-              <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-[#182442] hover:bg-[#f3f4f5] transition-all">
-                <span className="material-symbols-outlined">view_kanban</span> Funnel / Pipeline
-              </button>
+              <Link 
+                activeProps={{ className: "bg-[#006c49]/10 text-[#006c49] font-bold" }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-[#182442] hover:bg-[#f3f4f5] transition-all"
+                to="/contactos"
+              >
+                <span className="material-symbols-outlined">person</span> Contactos
+              </Link>
+              <Link 
+                activeProps={{ className: "bg-[#006c49]/10 text-[#006c49] font-bold" }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-[#182442] hover:bg-[#f3f4f5] transition-all"
+                to="/segmentacion"
+              >
+                <span className="material-symbols-outlined">filter_alt</span> Segmentación
+              </Link>
+              <Link 
+                activeProps={{ className: "bg-[#006c49]/10 text-[#006c49] font-bold" }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-[#182442] hover:bg-[#f3f4f5] transition-all"
+                to="/metricas"
+              >
+                <span className="material-symbols-outlined">analytics</span> Métricas
+              </Link>
+              <Link 
+                activeProps={{ className: "bg-[#006c49]/10 text-[#006c49] font-bold" }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-[#182442] hover:bg-[#f3f4f5] transition-all"
+                to="/inbox"
+              >
+                <span className="material-symbols-outlined">mail</span> Inbox Unificado
+              </Link>
+              <Link 
+                activeProps={{ className: "bg-[#006c49]/10 text-[#006c49] font-bold" }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-[#182442] hover:bg-[#f3f4f5] transition-all"
+                to="/mi-inbox"
+              >
+                <span className="material-symbols-outlined">chat</span> Mi Inbox
+              </Link>
             </div>
 
             <div className="h-px bg-[#c6c6ce]/30 my-6"></div>

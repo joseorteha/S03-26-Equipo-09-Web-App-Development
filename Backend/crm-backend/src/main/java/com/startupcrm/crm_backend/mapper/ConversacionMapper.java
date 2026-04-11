@@ -13,6 +13,15 @@ public class ConversacionMapper {
         dto.setCanal(c.getCanal());
         dto.setContenido(c.getContenido());
         dto.setFechaHora(c.getFechaHora());
+        
+        if (c.getContacto() != null) {
+            dto.setContactoId(c.getContacto().getId());
+        }
+        
+        if (c.getVendedorAsignado() != null) {
+            dto.setVendedorAsignadoId(c.getVendedorAsignado().getId());
+            dto.setVendedorAsignadoNombre(c.getVendedorAsignado().getNombre());
+        }
 
         return dto;
     }

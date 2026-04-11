@@ -1,5 +1,7 @@
-import { useState, useMemo } from 'react'; 
+import { useState, useEffect } from 'react'; 
+import { useNavigate } from '@tanstack/react-router';
 import { dashboardMockData, MOCK_DASHBOARD_STATS } from '../features/dashboard/mocks/dashboardData';
+import { metricasService, Metricas, FunnelMetricas } from '../common/apiClient';
 import { LineChart } from '../components/charts/line/Line';
 import { BarChart } from '../components/charts/bar/bar';
 import { PieChart } from '../components/charts/pie/pie';
@@ -9,31 +11,50 @@ import { Button } from '../components/ui/Button/Button';
 import { Modal } from '../components/ui/Modal/Modal';
 
 export const DashboardPage = () => {
-  const stats = MOCK_DASHBOARD_STATS;
+  const navigate = useNavigate();
   const [isDevelopmentModalOpen, setIsDevelopmentModalOpen] = useState(false);
+  const [metricas, setMetricas] = useState<Metricas | null>(null);
+  const [funnel, setFunnel] = useState<FunnelMetricas | null>(null);
+
+  useEffect(() => {
+    const cargarMetricas = async () => {
+      try {
+        const [metricsData, funnelData] = await Promise.all([
+          metricasService.getResumen(),
+          metricasService.getFunnel()
+        ]);
+        setMetricas(metricsData);
+        setFunnel(funnelData);
+      } catch (error) {
+        console.error('Error cargando métricas:', error);
+      }
+    };
+    cargarMetricas();
+  }, []);
+
+  // Usar metricas reales si están disponibles, si no usar mock
+  const mockStats = MOCK_DASHBOARD_STATS;
 
   /**
    * Transforma datos mockados al formato esperado por Nivo
    */
-  const chartData = useMemo(() => {
-    return {
-      lineData: [
-        {
-          id: 'Ingresos',
-          data: dashboardMockData.revenue.map(item => ({
-            x: item.month,
-            y: item.ingresos
-          }))
-        }
-      ],
-      pieData: dashboardMockData.leadsByStatus.map(item => ({
-        id: item.estado,
-        label: item.estado,
-        value: item.cantidad
-      })),
-      barData: dashboardMockData.sources
-    };
-  }, []);
+  const chartData = {
+    lineData: [
+      {
+        id: 'Ingresos',
+        data: dashboardMockData.revenue.map(item => ({
+          x: item.month,
+          y: item.ingresos
+        }))
+      }
+    ],
+    pieData: dashboardMockData.leadsByStatus.map(item => ({
+      id: item.estado,
+      label: item.estado,
+      value: item.cantidad
+    })),
+    barData: dashboardMockData.sources
+  };
 
   // SOLO UN RETURN QUE ENCAPSULA TODO
   return (
@@ -100,34 +121,88 @@ export const DashboardPage = () => {
         <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center sm:text-left">
           <div>
             <p className="text-white/60 text-xs font-bold uppercase tracking-widest">Contactos Totales</p>
-            <h4 className="text-4xl font-extrabold mt-2">{stats.totalContactos.toLocaleString()}</h4>
+            <h4 className="text-4xl font-extrabold mt-2">{metricas?.totalContactos || mockStats.totalContactos.toLocaleString()}</h4>
             <p className="text-secondary text-sm font-bold mt-1">+15% este mes</p>
           </div>
           <div>
-            <p className="text-white/60 text-xs font-bold uppercase tracking-widest">Interacciones</p>
-            <h4 className="text-4xl font-extrabold mt-2">{stats.interaccionesTotales.toLocaleString()}</h4>
-            <p className="text-white/40 text-sm mt-1">Omnicanal (WA/Email)</p>
+            <p className="text-white/60 text-xs font-bold uppercase tracking-widest">Conversaciones</p>
+            <h4 className="text-4xl font-extrabold mt-2">{metricas?.totalConversaciones || mockStats.interaccionesTotales.toLocaleString()}</h4>
+            <p className="text-white/40 text-sm mt-1">Email + WhatsApp</p>
           </div>
           <div>
-            <p className="text-white/60 text-xs font-bold uppercase tracking-widest">Sin Leer</p>
-            <h4 className="text-4xl font-extrabold mt-2 text-yellow-400">{stats.mensajesSinLeer}</h4>
-            <button className="text-sm font-bold text-secondary hover:underline mt-1">Ver Inbox →</button>
+            <p className="text-white/60 text-xs font-bold uppercase tracking-widest">Seguimientos Pendientes</p>
+            <h4 className="text-4xl font-extrabold mt-2 text-yellow-400">{metricas?.seguimientosPendientes || mockStats.mensajesSinLeer}</h4>
+            <button 
+              onClick={() => navigate({ to: '/contactos' })}
+              className="text-sm font-bold text-secondary hover:underline mt-1"
+            >
+              Gestionar →
+            </button>
           </div>
         </div>
       </Card>
 
+      {/* Embudo de conversión rápido */}
+      {funnel && (
+        <Card>
+          <h3 className="text-lg font-bold text-primary mb-4">Embudo de Conversión</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div>
+              <p className="text-sm text-on-surface-variant font-medium">Leads Activos</p>
+              <p className="text-2xl font-bold text-primary mt-1">{funnel.leadsActivos}</p>
+            </div>
+            <div>
+              <p className="text-sm text-on-surface-variant font-medium">En Seguimiento</p>
+              <p className="text-2xl font-bold text-secondary mt-1">{funnel.enSeguimiento}</p>
+              <p className="text-xs text-on-surface-variant mt-1">
+                {(funnel.tasaConversion_LED_a_Seguimiento * 100).toFixed(1)}% conv.
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-on-surface-variant font-medium">Calificados</p>
+              <p className="text-2xl font-bold text-warning mt-1">{funnel.calificados}</p>
+              <p className="text-xs text-on-surface-variant mt-1">
+                {(funnel.tasaConversion_Seguimiento_a_Calificado * 100).toFixed(1)}% conv.
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-on-surface-variant font-medium">Clientes</p>
+              <p className="text-2xl font-bold text-success mt-1">{funnel.clientes}</p>
+              <p className="text-xs text-on-surface-variant mt-1">
+                {(funnel.tasaConversion_Calificado_a_Cliente * 100).toFixed(1)}% conv.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* 4. Acciones Rápidas */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Button className="flex-col h-28" icon="person_add" variant="outline" onClick={() => { setIsDevelopmentModalOpen(true); }}>
-          <span className="text-sm font-bold text-primary">Añadir Vendedor</span>
+        <Button 
+          className="flex-col h-28" 
+          icon="person_add" 
+          variant="outline" 
+          onClick={() => navigate({ to: '/contactos' })}
+        >
+          <span className="text-sm font-bold text-primary">Gestionar Contactos</span>
         </Button>
 
-        <Button className="flex-col h-28" icon="database" variant="outline" onClick={() => { setIsDevelopmentModalOpen(true); }}>
-          <span className="text-sm font-bold text-primary">Exportar Leads</span>
+        <Button 
+          className="flex-col h-28" 
+          icon="filter_alt" 
+          variant="outline" 
+          onClick={() => navigate({ to: '/segmentacion' })}
+        >
+          <span className="text-sm font-bold text-primary">Ver Segmentación</span>
         </Button>
 
-        <Button className="flex-col h-28" icon="settings" variant="outline" onClick={() => { setIsDevelopmentModalOpen(true); }}>
-          <span className="text-sm font-bold text-primary">Ajustes</span>
+        <Button 
+          className="flex-col h-28" 
+          icon="analytics" 
+          variant="outline" 
+          onClick={() => navigate({ to: '/metricas' })}
+        >
+          <span className="text-sm font-bold text-primary">Análisis Completo</span>
         </Button>
       </section>
 
