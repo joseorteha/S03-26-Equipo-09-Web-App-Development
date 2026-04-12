@@ -159,26 +159,6 @@ export const ContactosPage = () => {
       {/* Modal para Nuevo Lead */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Crear Nuevo Lead">
         <form className="space-y-4">
-          {/* SELECTOR DE VENDEDOR - SOLO PARA ADMIN */}
-          {isAdmin && (
-            <div>
-              <label className="block text-sm font-medium text-[#182442] mb-1">Asignar a Vendedor * <span className="text-red-500">(Campo Admin)</span></label>
-              <select
-                value={newLeadVendedor}
-                onChange={(e) => setNewLeadVendedor(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-[#006c49] focus:ring-2 focus:ring-[#006c49]/20 focus:outline-none transition-all"
-                required={isAdmin}
-              >
-                <option value="">-- Selecciona un vendedor --</option>
-                {VENDEDORES_MOCK.map((vendedor) => (
-                  <option key={vendedor.id} value={vendedor.id.toString()}>
-                    {vendedor.nombre} ({vendedor.email})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
           <div>
             <label className="block text-sm font-medium text-[#182442] mb-1">Nombre Completo *</label>
             <input 
@@ -218,6 +198,26 @@ export const ContactosPage = () => {
               <option value="CLIENTE">Cliente</option>
             </select>
           </div>
+
+          {/* SELECTOR DE VENDEDOR - SOLO PARA ADMIN - AL FINAL */}
+          {isAdmin && (
+            <div>
+              <label className="block text-sm font-medium text-[#182442] mb-1">Asignar a Vendedor *</label>
+              <select
+                value={newLeadVendedor}
+                onChange={(e) => setNewLeadVendedor(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-[#006c49] focus:ring-2 focus:ring-[#006c49]/20 focus:outline-none transition-all"
+                required
+              >
+                <option value="">-- Selecciona un vendedor --</option>
+                {VENDEDORES_MOCK.map((vendedor) => (
+                  <option key={vendedor.id} value={vendedor.id.toString()}>
+                    {vendedor.nombre} ({vendedor.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="flex gap-3 justify-end pt-4">
             <button
