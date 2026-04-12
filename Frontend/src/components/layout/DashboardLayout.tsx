@@ -200,38 +200,38 @@ export const DashboardLayout = () => {
               </Link>
               <Link 
                 activeProps={{ className: "bg-[#006c49]/10 text-[#006c49] font-bold" }}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-[#182442] hover:bg-[#f3f4f5] transition-all"
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold hover:bg-[#f3f4f5] transition-all"
                 to="/contactos"
               >
-                <span className="material-symbols-outlined">person</span> Contactos
+                <span className="material-symbols-outlined">person</span> Leads
               </Link>
               <Link 
                 activeProps={{ className: "bg-[#006c49]/10 text-[#006c49] font-bold" }}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-[#182442] hover:bg-[#f3f4f5] transition-all"
-                to="/segmentacion"
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold hover:bg-[#f3f4f5] transition-all"
+                to="/vendedores"
               >
-                <span className="material-symbols-outlined">filter_alt</span> Segmentación
+                <span className="material-symbols-outlined">people</span> Vendedores
               </Link>
               <Link 
                 activeProps={{ className: "bg-[#006c49]/10 text-[#006c49] font-bold" }}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-[#182442] hover:bg-[#f3f4f5] transition-all"
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold hover:bg-[#f3f4f5] transition-all"
+                to="/inbox"
+              >
+                <span className="material-symbols-outlined">mail</span> Inbox
+              </Link>
+              <Link 
+                activeProps={{ className: "bg-[#006c49]/10 text-[#006c49] font-bold" }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold hover:bg-[#f3f4f5] transition-all"
                 to="/metricas"
               >
                 <span className="material-symbols-outlined">analytics</span> Métricas
               </Link>
               <Link 
                 activeProps={{ className: "bg-[#006c49]/10 text-[#006c49] font-bold" }}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-[#182442] hover:bg-[#f3f4f5] transition-all"
-                to="/inbox"
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold hover:bg-[#f3f4f5] transition-all"
+                to="/plantillas"
               >
-                <span className="material-symbols-outlined">mail</span> Inbox Unificado
-              </Link>
-              <Link 
-                activeProps={{ className: "bg-[#006c49]/10 text-[#006c49] font-bold" }}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-[#182442] hover:bg-[#f3f4f5] transition-all"
-                to="/mi-inbox"
-              >
-                <span className="material-symbols-outlined">chat</span> Mi Inbox
+                <span className="material-symbols-outlined">mail_outline</span> Plantillas
               </Link>
 
               {/* BOTÓN SALIR */}

@@ -8,6 +8,8 @@ import { SegmentacionPage } from './pages/Segmentacion';
 import { MetricasPage } from './pages/Metricas';
 import InboxPage from './pages/Inbox';
 import MiInboxPage from './pages/MiInbox';
+import Vendedores from './pages/Vendedores';
+import Plantillas from './pages/Plantillas';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 
 const rootRoute = createRootRoute({
@@ -74,6 +76,18 @@ const miInboxRoute = createRoute({
   component: MiInboxPage,
 });
 
+const vendedoresRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/vendedores',
+  component: Vendedores,
+});
+
+const plantillasRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: '/plantillas',
+  component: Plantillas,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
@@ -85,6 +99,8 @@ const routeTree = rootRoute.addChildren([
     metricasRoute,
     inboxRoute,
     miInboxRoute,
+    vendedoresRoute,
+    plantillasRoute,
   ]),
 ]);
 
