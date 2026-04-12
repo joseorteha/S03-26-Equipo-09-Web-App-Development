@@ -7,6 +7,7 @@ export const useAuth = () => {
   const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
   const userEmail = typeof window !== 'undefined' ? localStorage.getItem('userEmail') : null;
   const userName = typeof window !== 'undefined' ? localStorage.getItem('userName') : null;
+  const userId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
   
   const isAuthenticated = !!token;
   const isAdmin = userRole === 'ADMIN';
@@ -30,7 +31,8 @@ export const useAuth = () => {
     isVendedor,
     userRole,
     userEmail,
-    userName
+    userName,
+    userId: userId ? parseInt(userId) : null
   };
 };
 

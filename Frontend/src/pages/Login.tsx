@@ -12,8 +12,8 @@ import { Badge } from '../components/ui/Badge/Badge';
 
 // Credenciales de usuarios para prueba
 const USERS = {
-  admin: { email: 'admin@crm.com', password: '123456', role: 'ADMIN', name: 'Harold Admin' },
-  vendedor: { email: 'vendedor@crm.com', password: '123456', role: 'VENDEDOR', name: 'Carlos Vendedor' }
+  admin: { id: 1, email: 'admin@crm.com', password: '123456', role: 'ADMIN', name: 'Harold Admin' },
+  vendedor: { id: 2, email: 'vendedor@crm.com', password: '123456', role: 'VENDEDOR', name: 'Carlos Vendedor' }
 };
 
 export const Login = () => {
@@ -62,6 +62,7 @@ export const Login = () => {
         // ✅ Login exitoso - Guardar token y rol en localStorage
         const mockToken = `mock-jwt-${Date.now()}`;
         localStorage.setItem('authToken', mockToken);
+        localStorage.setItem('userId', String(authenticatedUser.id));
         localStorage.setItem('userRole', authenticatedUser.role);
         localStorage.setItem('userEmail', authenticatedUser.email);
         localStorage.setItem('userName', authenticatedUser.name);
