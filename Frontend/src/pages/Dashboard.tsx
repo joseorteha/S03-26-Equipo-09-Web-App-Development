@@ -246,18 +246,18 @@ export const DashboardPage = () => {
         <Card as="article" className="p-6 flex flex-col">
           <div className="mb-4">
             <h2 className="text-lg font-bold text-primary">
-              Eficiencia de Vendedores
+              Tasa de Conversión por Vendedor
             </h2>
             <p className="text-sm text-on-surface-variant mt-1">
-              Top vendedores por ventas realizadas
+              Eficiencia en capactación de leads (%)
             </p>
           </div>
           <div style={{ minHeight: '300px' }}>
             <BarChart data={[
-              { id: 'Juan García', data: [{ x: 'Ventas', y: 45 }] },
-              { id: 'María López', data: [{ x: 'Ventas', y: 38 }] },
-              { id: 'Carlos Ruiz', data: [{ x: 'Ventas', y: 32 }] },
-              { id: 'Ana Chen', data: [{ x: 'Ventas', y: 25 }] }
+              { id: 'Juan García', data: [{ x: 'Conversión %', y: 34 }] },
+              { id: 'María López', data: [{ x: 'Conversión %', y: 38 }] },
+              { id: 'Carlos Ruiz', data: [{ x: 'Conversión %', y: 29 }] },
+              { id: 'Ana Chen', data: [{ x: 'Conversión %', y: 32 }] }
             ]} />
           </div>
         </Card>
