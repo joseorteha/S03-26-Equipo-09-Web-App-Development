@@ -24,13 +24,13 @@ export const BarChart = ({ data }: BarChartProps) => (
     role="application"
     valueScale={{ type: 'linear' }}
     axisBottom={{
-      tickSize: 5,
-      tickPadding: 8,
+      tickSize: 3,
+      tickPadding: 3,
       tickRotation: -45
     }}
     axisLeft={{
-      tickSize: 5,
-      tickPadding: 5,
+      tickSize: 3,
+      tickPadding: 3,
       tickRotation: 0,
       legend: 'Tasa %',
       legendPosition: 'middle',
