@@ -7,7 +7,7 @@ interface Conversacion {
   contenido: string;
   fechaHora: string;
   contactoId: number;
-  estado?: 'ACTIVO' | 'EN_SEGUIMIENTO' | 'CLIENTE';
+  estado?: 'ACTIVO' | 'EN_SEGUIMIENTO' | 'CLIENTE' | 'INACTIVO';
   vendedorAsignadoNombre?: string;
 }
 
@@ -21,7 +21,7 @@ export const UnifiedInbox = ({ vendedorId, vendedorNombre }: UnifiedInboxProps) 
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [filtroCanal, setFiltroCanal] = useState<'todos' | 'email' | 'whatsapp'>('todos');
-  const [filtroEstado, setFiltroEstado] = useState<'todos' | 'activo' | 'seguimiento' | 'cliente'>('todos');
+  const [filtroEstado, setFiltroEstado] = useState<'todos' | 'activo' | 'seguimiento' | 'cliente' | 'inactivo'>('todos');
 
   useEffect(() => {
     cargarConversaciones();
@@ -52,7 +52,8 @@ export const UnifiedInbox = ({ vendedorId, vendedorNombre }: UnifiedInboxProps) 
         const estadoMap: Record<string, string> = {
           'activo': 'ACTIVO',
           'seguimiento': 'EN_SEGUIMIENTO',
-          'cliente': 'CLIENTE'
+          'cliente': 'CLIENTE',
+          'inactivo': 'INACTIVO'
         };
         if (conv.estado !== estadoMap[filtroEstado]) return false;
       }
@@ -86,7 +87,8 @@ export const UnifiedInbox = ({ vendedorId, vendedorNombre }: UnifiedInboxProps) 
     const colorMap: Record<string, { bg: string; text: string; label: string }> = {
       'ACTIVO': { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Activo' },
       'EN_SEGUIMIENTO': { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Seguimiento' },
-      'CLIENTE': { bg: 'bg-green-100', text: 'text-green-700', label: 'Cliente' }
+      'CLIENTE': { bg: 'bg-green-100', text: 'text-green-700', label: 'Cliente' },
+      'INACTIVO': { bg: 'bg-red-100', text: 'text-red-700', label: 'Inactivo' }
     };
     
     if (!estado || !colorMap[estado]) return null;
@@ -128,7 +130,7 @@ export const UnifiedInbox = ({ vendedorId, vendedorNombre }: UnifiedInboxProps) 
       </header>
 
       {/* Estadísticas */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
           <div className="flex items-center justify-between">
             <div>
@@ -160,16 +162,6 @@ export const UnifiedInbox = ({ vendedorId, vendedorNombre }: UnifiedInboxProps) 
               </p>
             </div>
             <span className="material-symbols-outlined text-purple-300 text-4xl">draft</span>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 border border-orange-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-600 text-xs font-medium">Filtradas</p>
-              <p className="text-2xl font-bold text-orange-600">{conversacionesFiltradas.length}</p>
-            </div>
-            <span className="material-symbols-outlined text-orange-300 text-4xl">filter_alt</span>
           </div>
         </div>
       </div>
@@ -215,13 +207,15 @@ export const UnifiedInbox = ({ vendedorId, vendedorNombre }: UnifiedInboxProps) 
                 { id: 'todos', label: 'Todos', color: 'slate' },
                 { id: 'activo', label: 'Activo', color: 'blue' },
                 { id: 'seguimiento', label: 'Seguimiento', color: 'yellow' },
-                { id: 'cliente', label: 'Cliente', color: 'green' }
+                { id: 'cliente', label: 'Cliente', color: 'green' },
+                { id: 'inactivo', label: 'Inactivo', color: 'red' }
               ].map((opcion) => {
                 const colorClasses: Record<string, string> = {
                   'slate': 'bg-slate-100 text-slate-700 border-slate-300',
                   'blue': 'bg-blue-100 text-blue-700 border-blue-300',
                   'yellow': 'bg-yellow-100 text-yellow-700 border-yellow-300',
-                  'green': 'bg-green-100 text-green-700 border-green-300'
+                  'green': 'bg-green-100 text-green-700 border-green-300',
+                  'red': 'bg-red-100 text-red-700 border-red-300'
                 };
 
                 return (
