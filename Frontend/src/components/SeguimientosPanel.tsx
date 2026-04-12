@@ -211,10 +211,10 @@ interface SeguimientoModalProps {
 
 const SeguimientoModal = ({ seguimiento, isOpen, onClose, contactos, onSave }: SeguimientoModalProps) => {
   const [formData, setFormData] = useState<Omit<Seguimiento, 'id'>>({
-    tarea: seguimiento?.tarea ?? '',
-    fecha: seguimiento?.fecha ?? new Date().toISOString().split('T')[0],
-    completado: seguimiento?.completado ?? false,
-    contactoId: seguimiento?.contactoId ?? 0
+    tarea: (seguimiento?.tarea || '') as string,
+    fecha: (seguimiento?.fecha || new Date().toISOString().split('T')[0]) as string,
+    completado: seguimiento?.completado || false,
+    contactoId: (seguimiento?.contactoId || 0) as number
   });
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);

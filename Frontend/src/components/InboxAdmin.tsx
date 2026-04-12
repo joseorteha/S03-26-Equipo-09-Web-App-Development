@@ -85,19 +85,32 @@ export const InboxAdmin: React.FC = () => {
     <div className="p-6 bg-white rounded-lg shadow">
       <h2 className="text-2xl font-bold mb-6">📬 Inbox Administrativo Unificado</h2>
 
-      {/* Filtrol por Vendedor */}
-      <div className="mb-6 flex items-center gap-4">
-        <label className="text-sm font-medium">Filtrar por vendedor:</label>
-        <select
-          value={filtroVendedor || ''}
-          onChange={(e) => setFiltroVendedor(e.target.value ? Number(e.target.value) : null)}
-          className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+      {/* Filtros por Vendedor - Badges Style */}
+      <div className="mb-6 flex flex-wrap gap-3 items-center">
+        <span className="text-sm font-semibold text-gray-600">Filtrar por vendedor:</span>
+        <button
+          onClick={() => setFiltroVendedor(null)}
+          className={`px-4 py-2 rounded-full font-semibold text-sm transition-all transform ${
+            filtroVendedor === null
+              ? 'bg-indigo-500 text-white border-2 border-indigo-600 scale-105 shadow-lg'
+              : 'bg-indigo-100 text-indigo-700 border-2 border-indigo-200 hover:bg-indigo-200 hover:scale-105'
+          }`}
         >
-          <option value="">Todos los vendedores</option>
-          {vendedores.map(v => (
-            <option key={v.id} value={v.id}>{v.nombre}</option>
-          ))}
-        </select>
+          👥 Todos
+        </button>
+        {vendedores.map((vendedor) => (
+          <button
+            key={vendedor.id}
+            onClick={() => setFiltroVendedor(vendedor.id)}
+            className={`px-4 py-2 rounded-full font-semibold text-sm transition-all transform whitespace-nowrap ${
+              filtroVendedor === vendedor.id
+                ? 'bg-cyan-500 text-white border-2 border-cyan-600 scale-105 shadow-lg'
+                : 'bg-cyan-100 text-cyan-700 border-2 border-cyan-200 hover:bg-cyan-200 hover:scale-105'
+            }`}
+          >
+            👤 {vendedor.nombre}
+          </button>
+        ))}
       </div>
 
       {/* Total de conversaciones */}

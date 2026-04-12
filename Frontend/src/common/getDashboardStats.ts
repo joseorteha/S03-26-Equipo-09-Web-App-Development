@@ -1,11 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
-import type { DashboardStats } from '../types';
-import type { ApiResponse } from '../../../common/types';
+import type { ApiResponse } from './types';
+
+export interface DashboardStats {
+  totalLeads: number;
+  leadsMes: number;
+  leadsSemana: number;
+  conversionRate: number;
+  leadsNuevos?: number;
+  leadsTotalMes?: number;
+  conversionRateMes?: number;
+}
 
 // Nota: Asumiendo que existe una instancia de API configurada (ej. axios o fetch wrapper)
 const fetchDashboardStats = async (): Promise<DashboardStats> => {
   const response = await fetch('/api/dashboard/stats');
-  const result: ApiResponse<DashboardStats> = await response.json();
+  const result = (await response.json()) as ApiResponse<DashboardStats>;
   return result.data;
 };
 

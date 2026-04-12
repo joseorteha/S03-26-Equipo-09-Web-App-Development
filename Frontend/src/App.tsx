@@ -1,4 +1,4 @@
-import React from 'react';
+// App component
 import { RouterProvider } from '@tanstack/react-router';
 import { router } from './router'; // Importa la instancia desde la raíz de src
 

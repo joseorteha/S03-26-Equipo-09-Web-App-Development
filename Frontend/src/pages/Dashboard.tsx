@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'; 
 import { useNavigate } from '@tanstack/react-router';
+import { useAuth } from '../hooks/useAuth';
 import { dashboardMockData, MOCK_DASHBOARD_STATS } from '../features/dashboard/mocks/dashboardData';
 import { metricasService, Metricas, FunnelMetricas } from '../common/apiClient';
 import { LineChart } from '../components/charts/line/Line';
@@ -12,6 +13,7 @@ import { Modal } from '../components/ui/Modal/Modal';
 
 export const DashboardPage = () => {
   const navigate = useNavigate();
+  const { isVendedor, userName } = useAuth();
   const [isDevelopmentModalOpen, setIsDevelopmentModalOpen] = useState(false);
   const [metricas, setMetricas] = useState<Metricas | null>(null);
   const [funnel, setFunnel] = useState<FunnelMetricas | null>(null);
@@ -32,12 +34,8 @@ export const DashboardPage = () => {
     cargarMetricas();
   }, []);
 
-  // Usar metricas reales si están disponibles, si no usar mock
   const mockStats = MOCK_DASHBOARD_STATS;
 
-  /**
-   * Transforma datos mockados al formato esperado por Nivo
-   */
   const chartData = {
     lineData: [
       {
@@ -56,18 +54,101 @@ export const DashboardPage = () => {
     barData: dashboardMockData.sources
   };
 
-  // SOLO UN RETURN QUE ENCAPSULA TODO
+  // ============================================
+  // DASHBOARD PARA VENDEDOR
+  // ============================================
+  if (isVendedor) {
+    return (
+      <div className="space-y-8 animate-fade-in p-2 md:p-6">
+        {/* Cabecera Simplificada */}
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight text-[#182442]">
+              Resumen de Actividad
+            </h2>
+            <p className="text-slate-600 text-base mt-1">
+              Tus leads y métricas del mes actual
+            </p>
+          </div>
+          <Badge variant="info" className="bg-blue-500 text-white">👔 Vendedor</Badge>
+        </header>
+
+        {/* KPIs Simplificados con Nueva Lógica */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Tareas Pendientes - Mensajes Sin Responder */}
+          <div 
+            className="p-6 rounded-xl border border-slate-200 hover:shadow-lg hover:border-amber-200 transition-all cursor-pointer bg-white"
+            onClick={() => navigate({ to: '/mi-inbox' })}
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-xl bg-amber-100 flex items-center justify-center">
+                <span className="material-symbols-outlined text-3xl text-amber-600">notifications_active</span>
+              </div>
+              <div>
+                <p className="text-sm text-slate-600 font-medium">Tareas Pendientes</p>
+                <h3 className="text-3xl font-bold text-amber-600 mt-1">8</h3>
+                <p className="text-xs text-amber-600 mt-1 font-medium">Mensajes sin responder</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Leads Totales del Mes */}
+          <Card className="hover:shadow-md transition-all">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-xl bg-green-100 flex items-center justify-center">
+                <span className="material-symbols-outlined text-3xl text-green-600">people</span>
+              </div>
+              <div>
+                <p className="text-sm text-slate-600 font-medium">Leads Totales</p>
+                <h3 className="text-3xl font-bold text-[#182442] mt-1">24</h3>
+                <p className="text-xs text-slate-500 mt-1">Asignados en Abril</p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Tasa de Conversión Mensual */}
+          <Card className="hover:shadow-md transition-all">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-xl bg-purple-100 flex items-center justify-center">
+                <span className="material-symbols-outlined text-3xl text-purple-600">trending_up</span>
+              </div>
+              <div>
+                <p className="text-sm text-slate-600 font-medium">Tasa Conversión</p>
+                <h3 className="text-3xl font-bold text-[#182442] mt-1">25%</h3>
+                <p className="text-xs text-slate-500 mt-1">Este mes (6/24 clientes ganados)</p>
+              </div>
+            </div>
+          </Card>
+        </section>
+
+        {/* Acciones Rápidas - Solo Nuevo Lead */}
+        <section className="flex justify-center">
+          <Button
+            onClick={() => {/* Abrir modal de nuevo lead - próximamente */}}
+            className="h-14 px-8 bg-[#006c49] hover:bg-[#005236] text-white font-semibold text-lg"
+          >
+            <span className="material-symbols-outlined mr-2">add</span>
+            Nuevo Lead
+          </Button>
+        </section>
+      </div>
+    );
+  }
+
+  // ============================================
+  // DASHBOARD PARA ADMIN (Original)
+  // ============================================
   return (
     <div className="space-y-8 animate-fade-in p-2 md:p-6">
       
       {/* 1. Cabecera del Módulo */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-primary">
-            Panel de Control General
+          <h2 className="text-3xl font-bold tracking-tight text-[#182442]">
+            📊 Panel Administrativo
           </h2>
-          <p className="text-on-surface-variant text-base mt-1">
-            Bienvenido de nuevo, Harold. Resumen operativo de tu CRM.
+          <p className="text-slate-600 text-base mt-1">
+            Bienvenido, {userName}. Resumen global de tu CRM.
           </p>
         </div>
         <Badge variant="success">Sistema Online</Badge>

@@ -1,4 +1,4 @@
-import React from 'react';
+// Inbox Page Component
 import { InboxAdmin } from '../components/InboxAdmin';
 
 export default function Inbox() {

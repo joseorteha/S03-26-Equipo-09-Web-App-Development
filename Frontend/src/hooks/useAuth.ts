@@ -1,14 +1,24 @@
 /**
- * Hook para verificar estado de autenticación
- * Retorna true si existe token en localStorage
+ * Hook para verificar estado de autenticación y rol
+ * Retorna true si existe token + información de rol
  */
 export const useAuth = () => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+  const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
+  const userEmail = typeof window !== 'undefined' ? localStorage.getItem('userEmail') : null;
+  const userName = typeof window !== 'undefined' ? localStorage.getItem('userName') : null;
+  
   const isAuthenticated = !!token;
+  const isAdmin = userRole === 'ADMIN';
+  const isVendedor = userRole === 'VENDEDOR';
 
   const logout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('rememberEmail');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userId');
     window.location.href = '/';
   };
 
@@ -16,6 +26,11 @@ export const useAuth = () => {
     isAuthenticated,
     token,
     logout,
+    isAdmin,
+    isVendedor,
+    userRole,
+    userEmail,
+    userName
   };
 };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { InboxVendedor } from '../components/InboxVendedor';
 import { usuarioService } from '../common/apiClient';
 
@@ -21,8 +21,8 @@ export default function MiInbox() {
     try {
       const data = await usuarioService.getVendedores();
       setVendedores(data);
-      if (data.length > 0) {
-        setVendedorSeleccionado(data[0]);
+      if (data && data.length > 0) {
+        setVendedorSeleccionado(data[0] || null);
       }
     } catch (error) {
       console.error('Error cargando vendedores:', error);

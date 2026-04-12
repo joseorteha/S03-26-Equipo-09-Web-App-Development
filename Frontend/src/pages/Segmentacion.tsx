@@ -46,26 +46,39 @@ export const SegmentacionPage = () => {
         </p>
       </header>
 
-      {/* Segmentos disponibles */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Segmentos disponibles - Badges Style */}
+      <div className="flex flex-wrap gap-3">
         {segmentos.map((seg) => (
           <button
             key={seg.id}
             onClick={() => setSelectedSegmento(seg.id as any)}
-            className={`p-4 rounded-lg border-2 transition-all ${
+            className={`px-4 py-2 rounded-full font-semibold text-sm transition-all transform ${
               selectedSegmento === seg.id
-                ? `border-${seg.color} bg-${seg.color}/10`
-                : 'border-outline/30 hover:border-outline/60'
+                ? 'scale-105 shadow-lg'
+                : 'hover:scale-105'
+            } ${
+              seg.id === 'LEAD_ACTIVO' 
+                ? selectedSegmento === seg.id
+                  ? 'bg-blue-500 text-white border-2 border-blue-600'
+                  : 'bg-blue-100 text-blue-700 border-2 border-blue-200 hover:bg-blue-200'
+                : seg.id === 'EN_SEGUIMIENTO'
+                ? selectedSegmento === seg.id
+                  ? 'bg-amber-500 text-white border-2 border-amber-600'
+                  : 'bg-amber-100 text-amber-700 border-2 border-amber-200 hover:bg-amber-200'
+                : seg.id === 'CALIFICADO'
+                ? selectedSegmento === seg.id
+                  ? 'bg-purple-500 text-white border-2 border-purple-600'
+                  : 'bg-purple-100 text-purple-700 border-2 border-purple-200 hover:bg-purple-200'
+                : selectedSegmento === seg.id
+                ? 'bg-green-500 text-white border-2 border-green-600'
+                : 'bg-green-100 text-green-700 border-2 border-green-200 hover:bg-green-200'
             }`}
           >
-            <div className="flex items-center gap-3 mb-2">
-              <span className="material-symbols-outlined text-2xl text-primary">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-base">
                 {seg.icon}
               </span>
-              <div className="text-left">
-                <h3 className="font-bold text-primary text-sm">{seg.nombre}</h3>
-                <p className="text-xs text-on-surface-variant">{seg.descripcion}</p>
-              </div>
+              <span>{seg.nombre}</span>
             </div>
           </button>
         ))}

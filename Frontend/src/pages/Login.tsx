@@ -10,39 +10,61 @@ import { Button } from '../components/ui/Button/Button';
 import { Card } from '../components/ui/Card/Card';
 import { Badge } from '../components/ui/Badge/Badge';
 
+// Credenciales de usuarios para prueba
+const USERS = {
+  admin: { email: 'admin@crm.com', password: '123456', role: 'ADMIN', name: 'Harold Admin' },
+  vendedor: { email: 'vendedor@crm.com', password: '123456', role: 'VENDEDOR', name: 'Carlos Vendedor' }
+};
+
 export const Login = () => {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Obtener email recordado o usar admin por defecto
+  const rememberedEmail = typeof window !== 'undefined' ? localStorage.getItem('rememberEmail') : null;
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
+    setValue
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    mode: 'onBlur', // Mostrar errores al salir del campo
+    mode: 'onBlur',
     defaultValues: {
-      rememberMe: false
+      email: rememberedEmail || 'admin@crm.com', // Default: Admin
+      password: '',
+      rememberMe: !!rememberedEmail
     }
   });
+
+  // Botones rápidos para cargar credenciales
+  const quickLogin = (userType: keyof typeof USERS) => {
+    const user = USERS[userType];
+    setValue('email', user.email);
+    setValue('password', user.password);
+  };
 
   const onSubmit = async (data: LoginFormValues) => {
     setServerError(null);
     setSuccessMessage(null);
 
-    // Simulación de validación de login
     try {
-      // Esperar 500ms para simular llamada a API
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      if (
-        data.email === 'admin@crm.com' &&
-        data.password === '123456'
-      ) {
-        // ✅ Login exitoso - Guardar token en localStorage
+      // Verificar credenciales contra los usuarios definidos
+      const authenticatedUser = Object.values(USERS).find(
+        user => user.email === data.email && user.password === data.password
+      );
+
+      if (authenticatedUser) {
+        // ✅ Login exitoso - Guardar token y rol en localStorage
         const mockToken = `mock-jwt-${Date.now()}`;
         localStorage.setItem('authToken', mockToken);
+        localStorage.setItem('userRole', authenticatedUser.role);
+        localStorage.setItem('userEmail', authenticatedUser.email);
+        localStorage.setItem('userName', authenticatedUser.name);
         
         if (data.rememberMe) {
           localStorage.setItem('rememberEmail', data.email);
@@ -50,7 +72,7 @@ export const Login = () => {
           localStorage.removeItem('rememberEmail');
         }
 
-        setSuccessMessage('¡Login exitoso! Redirigiendo...');
+        setSuccessMessage(`¡Bienvenido ${authenticatedUser.name}! Redirigiendo...`);
         
         // Redirigir al dashboard después de 1 segundo
         setTimeout(() => {
@@ -59,7 +81,7 @@ export const Login = () => {
       } else {
         // ❌ Credenciales inválidas
         setServerError(
-          'El correo o la contraseña son incorrectos. Intenta con admin@crm.com / 123456'
+          'El correo o la contraseña son incorrectos. Usa las credenciales mostradas abajo.'
         );
       }
     } catch (error) {
@@ -188,12 +210,46 @@ export const Login = () => {
             </div>
           </form>
 
-          {/* Footer Info */}
-          <div className="mt-8 pt-6 border-t border-slate-100 text-center">
-            <p className="text-xs text-slate-500 mb-3">Credenciales de prueba:</p>
-            <div className="text-xs space-y-1 bg-slate-50 p-3 rounded-lg font-mono text-slate-700">
-              <p>📧 admin@crm.com</p>
-              <p>🔐 123456</p>
+          {/* Footer Info - Credenciales de Prueba */}
+          <div className="mt-8 pt-6 border-t border-slate-100">
+            <p className="text-xs text-slate-500 mb-4 text-center font-semibold">Credenciales de Prueba</p>
+            
+            {/* Perfil Admin */}
+            <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-blue-900">👨‍💼 Admin</span>
+                  <Badge variant="primary" className="text-xs">Todas las funciones</Badge>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => quickLogin('admin')}
+                  className="text-xs px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded font-semibold transition-colors"
+                >
+                  Cargar
+                </button>
+              </div>
+              <p className="text-xs text-blue-700 font-mono">📧 admin@crm.com</p>
+              <p className="text-xs text-blue-700 font-mono">🔐 123456</p>
+            </div>
+
+            {/* Perfil Vendedor */}
+            <div className="p-3 bg-green-50 rounded-lg border border-green-100">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-green-900">👔 Vendedor</span>
+                  <Badge variant="success" className="text-xs">Mi Inbox</Badge>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => quickLogin('vendedor')}
+                  className="text-xs px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded font-semibold transition-colors"
+                >
+                  Cargar
+                </button>
+              </div>
+              <p className="text-xs text-green-700 font-mono">📧 vendedor@crm.com</p>
+              <p className="text-xs text-green-700 font-mono">🔐 123456</p>
             </div>
           </div>
         </Card>
