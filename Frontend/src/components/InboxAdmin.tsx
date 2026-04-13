@@ -462,7 +462,7 @@ export const InboxAdmin: React.FC = () => {
   if (loading) return <div className="text-center py-8 text-slate-600">Cargando conversaciones...</div>;
 
   return (
-    <div className="space-y-6 min-h-[calc(100vh-120px)] flex flex-col">
+    <div className="space-y-6 min-h-[calc(100vh-120px)] max-h-screen flex flex-col overflow-y-auto">
       {/* Header */}
       <div className="bg-white rounded-lg shadow p-6">
         <h1 className="text-3xl font-bold text-[#182442]">📬 Inbox Unificado Pro</h1>
