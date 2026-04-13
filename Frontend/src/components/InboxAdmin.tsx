@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { conversacionService, usuarioService } from '../common/apiClient';
+import jsPDF from 'jspdf';
+
+interface Mensaje {
+  id: number;
+  contenido: string;
+  fechaHora: string;
+  tipo: 'entrada' | 'salida';
+  remitente: string;
+}
 
 interface Conversacion {
   id: number;
@@ -9,8 +18,11 @@ interface Conversacion {
   fechaHora: string;
   contactoId: number;
   contactoNombre?: string;
+  contactoEmail?: string;
   vendedorAsignadoId?: number;
   vendedorAsignadoNombre?: string;
+  estado?: 'pendiente' | 'respondido' | 'cerrado';
+  mensajes?: Mensaje[];
 }
 
 interface Usuario {
@@ -28,7 +40,6 @@ interface Plantilla {
   variables?: string[];
 }
 
-// Mock de Plantillas
 const PLANTILLAS_MOCK: Plantilla[] = [
   {
     id: 1,
@@ -67,11 +78,18 @@ export const InboxAdmin: React.FC = () => {
   const [vendedores, setVendedores] = useState<Usuario[]>([]);
   const [filtroVendedor, setFiltroVendedor] = useState<number | null>(null);
   const [filtroCanal, setFiltroCanal] = useState<'Todos' | 'Email' | 'WhatsApp'>('Todos');
+  const [filtroEstado, setFiltroEstado] = useState<'Todos' | 'pendiente' | 'respondido' | 'cerrado'>('Todos');
+  const [filtroBusqueda, setFiltroBusqueda] = useState('');
   const [loading, setLoading] = useState(true);
+  
   const [selectedConversacion, setSelectedConversacion] = useState<Conversacion | null>(null);
   const [reasignarModal, setReasignarModal] = useState(false);
   const [nuevoVendedorId, setNuevoVendedorId] = useState<number | null>(null);
   const [plantillaModal, setPlantillaModal] = useState(false);
+  const [respuesta, setRespuesta] = useState('');
+  const [variablesModal, setVariablesModal] = useState(false);
+  const [plantillaSeleccionada, setPlantillaSeleccionada] = useState<Plantilla | null>(null);
+  const [variables, setVariables] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     cargarDatos();
@@ -84,7 +102,24 @@ export const InboxAdmin: React.FC = () => {
         conversacionService.getAll(),
         usuarioService.getVendedores()
       ]);
-      setConversaciones(conversacionesRes);
+      
+      // Agregar mensajes mock a cada conversación
+      // @ts-ignore
+      const conversacionesConMensajes = conversacionesRes.map((c: any) => ({
+        ...c,
+        estado: 'pendiente' as const,
+        mensajes: [
+          {
+            id: 1,
+            contenido: c.contenido,
+            fechaHora: c.fechaHora,
+            tipo: 'entrada' as const,
+            remitente: c.contactoNombre || 'Cliente'
+          }
+        ]
+      }));
+      
+      setConversaciones(conversacionesConMensajes);
       setVendedores(vendedoresRes);
     } catch (error) {
       console.error('Error cargando datos:', error);
@@ -93,12 +128,57 @@ export const InboxAdmin: React.FC = () => {
     }
   };
 
-  // Filtrar conversaciones por vendedor y canal
   const conversacionesFiltradas = conversaciones.filter(c => {
     const cumpleVendedor = !filtroVendedor || c.vendedorAsignadoId === filtroVendedor;
     const cumpleCanal = filtroCanal === 'Todos' || c.canal === filtroCanal;
-    return cumpleVendedor && cumpleCanal;
+    const cumpleEstado = filtroEstado === 'Todos' || c.estado === filtroEstado;
+    const cumpleBusqueda = !filtroBusqueda || 
+      c.contenido.toLowerCase().includes(filtroBusqueda.toLowerCase()) ||
+      c.contactoNombre?.toLowerCase().includes(filtroBusqueda.toLowerCase());
+    
+    return cumpleVendedor && cumpleCanal && cumpleEstado && cumpleBusqueda;
   });
+
+  const handleAplicarPlantilla = () => {
+    if (!plantillaSeleccionada) return;
+    
+    let contenido = plantillaSeleccionada.contenido;
+    Object.entries(variables).forEach(([key, value]) => {
+      contenido = contenido.replace(`{${key}}`, value);
+    });
+    
+    setRespuesta(contenido);
+    setVariablesModal(false);
+    setPlantillaSeleccionada(null);
+    setVariables({});
+  };
+
+  const handleEnviarRespuesta = async () => {
+    if (!selectedConversacion || !respuesta.trim()) return;
+
+    // Agregar mensaje a la conversación
+    const nuevoMensaje: Mensaje = {
+      id: (selectedConversacion.mensajes?.length || 0) + 1,
+      contenido: respuesta,
+      fechaHora: new Date().toISOString(),
+      tipo: 'salida',
+      remitente: 'Vendedor'
+    };
+
+    const conversacionActualizada: Conversacion = {
+      ...selectedConversacion,
+      mensajes: [...(selectedConversacion.mensajes || []), nuevoMensaje],
+      estado: 'respondido'
+    };
+
+    setSelectedConversacion(conversacionActualizada);
+    setRespuesta('');
+
+    // Actualizar en lista
+    setConversaciones(conversaciones.map(c => 
+      c.id === selectedConversacion.id ? conversacionActualizada : c
+    ));
+  };
 
   const handleReasignar = async () => {
     if (!selectedConversacion || !nuevoVendedorId) return;
@@ -109,40 +189,111 @@ export const InboxAdmin: React.FC = () => {
         nuevoVendedorId
       );
       setReasignarModal(false);
-      setSelectedConversacion(null);
       setNuevoVendedorId(null);
-      await cargarDatos();
+      
+      const vendedor = vendedores.find(v => v.id === nuevoVendedorId);
+      const updated = {
+        ...selectedConversacion,
+        vendedorAsignadoId: nuevoVendedorId,
+        vendedorAsignadoNombre: vendedor?.nombre
+      };
+      setSelectedConversacion(updated);
+      setConversaciones(conversaciones.map(c => 
+        c.id === selectedConversacion.id ? updated : c
+      ));
     } catch (error) {
       console.error('Error reasignando vendedor:', error);
     }
   };
 
-  const formatearFecha = (fecha: string) => {
-    return new Date(fecha).toLocaleString('es-ES');
-  };
-
   const descargarPDF = (conversacion: Conversacion) => {
-    const contenidoPDF = `
-CONVERSACIÓN #${conversacion.id}
-====================================
-Canal: ${conversacion.canal}
-Vendedor: ${conversacion.vendedorAsignadoNombre || 'Sin asignar'}
-Fecha: ${formatearFecha(conversacion.fechaHora)}
-Contacto: ${conversacion.contactoNombre || 'Desconocido'}
+    try {
+      const doc = new jsPDF();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let yPosition = 20;
 
-CONTENIDO:
-${conversacion.contenido}
-====================================
-Descargado: ${new Date().toLocaleString('es-ES')}
-    `;
+      // Header
+      doc.setFillColor(0, 108, 73);
+      doc.rect(0, 0, pageWidth, 30, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(20);
+      doc.text('Reporte de Conversación', 15, 22);
 
-    const element = document.createElement('a');
-    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(contenidoPDF));
-    element.setAttribute('download', `conversacion_${conversacion.id}.txt`);
-    element.style.display = 'none';
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+      yPosition = 45;
+      
+      // Información general
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Información General:', 15, yPosition);
+      yPosition += 8;
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.text(`ID: ${conversacion.id}`, 20, yPosition);
+      yPosition += 6;
+      doc.text(`Canal: ${conversacion.canal}`, 20, yPosition);
+      yPosition += 6;
+      doc.text(`Contacto: ${conversacion.contactoNombre || 'Desconocido'}`, 20, yPosition);
+      yPosition += 6;
+      doc.text(`Vendedor: ${conversacion.vendedorAsignadoNombre || 'Sin asignar'}`, 20, yPosition);
+      yPosition += 6;
+      doc.text(`Estado: ${conversacion.estado || 'pendiente'}`, 20, yPosition);
+      yPosition += 6;
+      const fechaConv = new Date(conversacion.fechaHora).toLocaleDateString('es-ES');
+      doc.text(`Fecha: ${fechaConv}`, 20, yPosition);
+      yPosition += 10;
+
+      // Historial de mensajes
+      doc.setFont('helvetica', 'bold');
+      doc.text('Historial de Conversación:', 15, yPosition);
+      yPosition += 8;
+
+      doc.setFont('helvetica', 'normal');
+      
+      if (conversacion.mensajes && conversacion.mensajes.length > 0) {
+        conversacion.mensajes.forEach((msg) => {
+          const texto = `${msg.remitente}: ${msg.contenido}`;
+          const lineas = doc.splitTextToSize(texto, pageWidth - 30) as string[];
+          
+          if (yPosition + (lineas.length * 6) > pageHeight - 20) {
+            doc.addPage();
+            yPosition = 20;
+          }
+
+          const colors = msg.tipo === 'entrada' ? [240, 240, 240] : [220, 240, 220];
+          doc.setFillColor(colors[0] || 0, colors[1] || 0, colors[2] || 0);
+          doc.rect(15, yPosition - 2, pageWidth - 30, (lineas.length * 6) + 2, 'F');
+          
+          doc.text(lineas as any, 20, yPosition);
+          yPosition += (lineas.length * 6) + 3;
+          
+          doc.setFontSize(8);
+          doc.setTextColor(150, 150, 150);
+          const fechaFormato = new Date(msg.fechaHora).toLocaleDateString('es-ES');
+          doc.text(fechaFormato, 20, yPosition);
+          yPosition += 4;
+          doc.setFontSize(10);
+          doc.setTextColor(0, 0, 0);
+        });
+      } else {
+        doc.text(conversacion.contenido || 'Sin contenido', 20, yPosition);
+        yPosition += 6;
+      }
+
+      // Footer
+      yPosition = pageHeight - 15;
+      doc.setFontSize(9);
+      doc.setTextColor(150, 150, 150);
+      const footerDate = new Date().toLocaleDateString('es-ES');
+      doc.text(`Descargado: ${footerDate}`, 15, yPosition);
+
+      doc.save(`conversacion_${conversacion.id}_${new Date().getTime()}.pdf`);
+    } catch (error) {
+      console.error('Error descargando PDF:', error);
+      alert('Error al descargar el PDF');
+    }
   };
 
   const getBadgeCanal = (canal: string) => {
@@ -152,194 +303,271 @@ Descargado: ${new Date().toLocaleString('es-ES')}
     return <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800">✉️ Email</span>;
   };
 
+  const getBadgeEstado = (estado?: string) => {
+    const estados = {
+      pendiente: 'bg-yellow-100 text-yellow-800',
+      respondido: 'bg-green-100 text-green-800',
+      cerrado: 'bg-gray-100 text-gray-800'
+    };
+    const estado_final = (estado || 'pendiente') as keyof typeof estados;
+    return (
+      <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${estados[estado_final]}`}>
+        {estado_final === 'pendiente' && '⏳'} 
+        {estado_final === 'respondido' && '✅'} 
+        {estado_final === 'cerrado' && '🔒'} 
+        {estado_final}
+      </span>
+    );
+  };
+
   if (loading) return <div className="text-center py-8 text-slate-600">Cargando conversaciones...</div>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 h-[calc(100vh-120px)] flex flex-col">
       {/* Header */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h1 className="text-3xl font-bold text-[#182442]">📬 Inbox Unificado</h1>
-        <p className="text-slate-600 mt-1">Gestiona todas tus conversaciones por email y WhatsApp</p>
+        <h1 className="text-3xl font-bold text-[#182442]">📬 Inbox Unificado Pro</h1>
+        <p className="text-slate-600 mt-1">Gestiona conversaciones, aplica plantillas y exporta reportes</p>
       </div>
 
-      {/* Filtros Mejorados */}
+      {/* Filtros */}
       <div className="bg-white rounded-lg shadow p-6 space-y-4">
-        <div className="flex flex-col gap-6">
-          {/* Filtro por Canal */}
+        {/* Búsqueda */}
+        <div>
+          <input
+            type="text"
+            placeholder="🔍 Buscar por mensaje, contacto, cliente..."
+            value={filtroBusqueda}
+            onChange={(e) => setFiltroBusqueda(e.target.value)}
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:border-[#006c49] focus:ring-2 focus:ring-[#006c49]/20"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Filtro Canal */}
           <div>
-            <label className="block text-sm font-semibold text-[#182442] mb-3">
-              📱 Filtrar por Canal
-            </label>
-            <div className="flex flex-wrap gap-2">
+            <label className="block text-xs font-semibold text-[#182442] mb-2">Canal</label>
+            <div className="flex gap-1 flex-wrap">
               {['Todos', 'Email', 'WhatsApp'].map((canal) => (
                 <button
                   key={canal}
                   onClick={() => setFiltroCanal(canal as 'Todos' | 'Email' | 'WhatsApp')}
-                  className={`px-4 py-2 rounded-full font-semibold text-sm transition-all transform ${
+                  className={`px-2 py-1 rounded text-xs font-semibold ${
                     filtroCanal === canal
-                      ? 'bg-[#006c49] text-white shadow-lg scale-105'
+                      ? 'bg-[#006c49] text-white'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
-                  {canal === 'Email' && '✉️'} {canal === 'WhatsApp' && '📱'} {canal}
+                  {canal}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Filtro por Vendedor (Solo Admin) */}
-          {isAdmin && vendedores.length > 0 && (
-            <div>
-              <label className="block text-sm font-semibold text-[#182442] mb-3">
-                👤 Filtrar por Vendedor
-              </label>
-              <div className="flex flex-wrap gap-2">
+          {/* Filtro Estado */}
+          <div>
+            <label className="block text-xs font-semibold text-[#182442] mb-2">Estado</label>
+            <div className="flex gap-1 flex-wrap">
+              {['Todos', 'pendiente', 'respondido', 'cerrado'].map((estado) => (
                 <button
-                  onClick={() => setFiltroVendedor(null)}
-                  className={`px-4 py-2 rounded-full font-semibold text-sm transition-all transform ${
-                    filtroVendedor === null
-                      ? 'bg-indigo-500 text-white shadow-lg scale-105'
+                  key={estado}
+                  onClick={() => setFiltroEstado(estado as any)}
+                  className={`px-2 py-1 rounded text-xs font-semibold ${
+                    filtroEstado === estado
+                      ? 'bg-indigo-500 text-white'
                       : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
                   }`}
                 >
-                  👥 Todos
+                  {estado === 'pendiente' && '⏳'} 
+                  {estado === 'respondido' && '✅'} 
+                  {estado === 'cerrado' && '🔒'} 
+                  {estado}
                 </button>
-                {vendedores.map((vendedor) => (
-                  <button
-                    key={vendedor.id}
-                    onClick={() => setFiltroVendedor(vendedor.id)}
-                    className={`px-4 py-2 rounded-full font-semibold text-sm transition-all transform whitespace-nowrap ${
-                      filtroVendedor === vendedor.id
-                        ? 'bg-cyan-500 text-white shadow-lg scale-105'
-                        : 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200'
-                    }`}
-                  >
-                    👤 {vendedor.nombre}
-                  </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Filtro Vendedor */}
+          {isAdmin && (
+            <div>
+              <label className="block text-xs font-semibold text-[#182442] mb-2">Vendedor</label>
+              <select
+                value={filtroVendedor || ''}
+                onChange={(e) => setFiltroVendedor(e.target.value ? Number(e.target.value) : null)}
+                className="w-full px-2 py-1 border border-slate-300 rounded text-xs"
+              >
+                <option value="">Todos</option>
+                {vendedores.map(v => (
+                  <option key={v.id} value={v.id}>{v.nombre}</option>
                 ))}
-              </div>
+              </select>
             </div>
           )}
-        </div>
 
-        {/* Indicador de Resultados */}
-        <div className="flex items-center justify-between pt-3 border-t border-slate-200">
-          <p className="text-sm font-medium text-slate-600">
-            <span className="font-bold text-[#006c49]">{conversacionesFiltradas.length}</span> conversaciones encontradas
-          </p>
-          <p className="text-xs text-slate-500">
-            Canal: {filtroCanal} {filtroVendedor && `• Vendedor seleccionado`}
-          </p>
+          {/* Info */}
+          <div className="flex items-end">
+            <p className="text-xs text-slate-600">
+              <span className="font-bold text-[#006c49]">{conversacionesFiltradas.length}</span> conversaciones
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Tabla de Conversaciones Mejorada */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">ID</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Canal</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Contacto</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Mensaje</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Vendedor</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Fecha</th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-slate-600 uppercase">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
+      {/* Contenido Principal - Split View */}
+      <div className="flex flex-1 gap-6 overflow-hidden">
+        
+        {/* Lista de Conversaciones */}
+        <div className="flex-1 bg-white rounded-lg shadow overflow-hidden flex flex-col">
+          <div className="overflow-y-auto flex-1">
+            <div className="divide-y">
               {conversacionesFiltradas.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
-                    <p className="text-lg font-medium">No hay conversaciones</p>
-                    <p className="text-sm">Ajusta los filtros para ver resultados</p>
-                  </td>
-                </tr>
+                <div className="p-8 text-center text-slate-500">
+                  <p className="text-lg font-medium">No hay conversaciones</p>
+                  <p className="text-sm">Ajusta los filtros</p>
+                </div>
               ) : (
                 conversacionesFiltradas.map((conv) => (
-                  <tr key={conv.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-medium text-slate-800">#{conv.id}</td>
-                    <td className="px-6 py-4 text-sm">{getBadgeCanal(conv.canal)}</td>
-                    <td className="px-6 py-4 text-sm text-slate-700 font-medium">{conv.contactoNombre || 'Desconocido'}</td>
-                    <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">{conv.contenido}</td>
-                    <td className="px-6 py-4 text-sm">
-                      {conv.vendedorAsignadoNombre ? (
-                        <span className="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-800">
-                          {conv.vendedorAsignadoNombre}
-                        </span>
-                      ) : (
-                        <span className="text-slate-400 text-xs">Sin asignar</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">{formatearFecha(conv.fechaHora)}</td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex gap-1 justify-center">
-                        <button
-                          onClick={() => {
-                            setSelectedConversacion(conv);
-                            setPlantillaModal(true);
-                          }}
-                          className="p-2 hover:bg-yellow-100 rounded text-yellow-600 transition-colors"
-                          title="Ver plantillas"
-                        >
-                          📧
-                        </button>
-                        <button
-                          onClick={() => descargarPDF(conv)}
-                          className="p-2 hover:bg-red-100 rounded text-red-600 transition-colors"
-                          title="Descargar PDF"
-                        >
-                          📥
-                        </button>
-                        {isAdmin && (
-                          <button
-                            onClick={() => {
-                              setSelectedConversacion(conv);
-                              setReasignarModal(true);
-                            }}
-                            className="p-2 hover:bg-blue-100 rounded text-blue-600 transition-colors"
-                            title="Reasignar"
-                          >
-                            👤
-                          </button>
-                        )}
+                  <div
+                    key={conv.id}
+                    onClick={() => setSelectedConversacion(conv)}
+                    className={`p-4 cursor-pointer transition-all border-l-4 ${
+                      selectedConversacion?.id === conv.id
+                        ? 'bg-slate-50 border-[#006c49] shadow-md'
+                        : 'bg-white border-transparent hover:bg-slate-50 border-slate-200'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-800">#{conv.id} - {conv.contactoNombre}</p>
+                        <p className="text-xs text-slate-500">{new Date(conv.fechaHora).toLocaleString('es-ES')}</p>
                       </div>
-                    </td>
-                  </tr>
+                      <div className="flex gap-1 flex-wrap justify-end">
+                        {getBadgeCanal(conv.canal)}
+                        {getBadgeEstado(conv.estado)}
+                      </div>
+                    </div>
+                    <p className="text-sm text-slate-600 line-clamp-2">{conv.contenido}</p>
+                    <p className="text-xs text-slate-500 mt-2">👤 {conv.vendedorAsignadoNombre || 'Sin asignar'}</p>
+                  </div>
                 ))
               )}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
+
+        {/* Panel de Chat */}
+        {selectedConversacion ? (
+          <div className="flex-1 bg-white rounded-lg shadow overflow-hidden flex flex-col">
+            {/* Header Chat */}
+            <div className="bg-gradient-to-r from-[#182442] to-[#006c49] text-white p-4 flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-lg">#{selectedConversacion.id} - {selectedConversacion.contactoNombre}</h3>
+                <p className="text-sm opacity-90">{selectedConversacion.canal} • {selectedConversacion.vendedorAsignadoNombre || 'Sin asignar'}</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setReasignarModal(true)}
+                  className="p-2 bg-white/20 hover:bg-white/30 rounded"
+                  title="Reasignar"
+                >
+                  👤
+                </button>
+                <button
+                  onClick={() => descargarPDF(selectedConversacion)}
+                  className="p-2 bg-white/20 hover:bg-white/30 rounded"
+                  title="Descargar PDF"
+                >
+                  📥
+                </button>
+              </div>
+            </div>
+
+            {/* Mensajes */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50">
+              {selectedConversacion.mensajes && selectedConversacion.mensajes.length > 0 ? (
+                selectedConversacion.mensajes.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex ${msg.tipo === 'entrada' ? 'justify-start' : 'justify-end'}`}
+                  >
+                    <div
+                      className={`max-w-xs px-4 py-2 rounded-lg ${
+                        msg.tipo === 'entrada'
+                          ? 'bg-white border border-slate-200'
+                          : 'bg-[#006c49] text-white'
+                      }`}
+                    >
+                      <p className={`text-xs font-semibold mb-1 ${msg.tipo === 'entrada' ? 'text-slate-600' : 'opacity-90'}`}>
+                        {msg.remitente}
+                      </p>
+                      <p className="text-sm break-words">{msg.contenido}</p>
+                      <p className={`text-xs mt-1 ${msg.tipo === 'entrada' ? 'text-slate-400' : 'opacity-75'}`}>
+                        {new Date(msg.fechaHora).toLocaleTimeString('es-ES')}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-slate-400 text-sm">No hay mensajes</div>
+              )}
+            </div>
+
+            {/* Input Respuesta */}
+            <div className="border-t border-slate-200 p-4 space-y-3 bg-white">
+              <div className="flex gap-2">
+                <textarea
+                  value={respuesta}
+                  onChange={(e) => setRespuesta(e.target.value)}
+                  placeholder="Escribe tu respuesta..."
+                  className="flex-1 px-4 py-2 border border-slate-300 rounded-lg resize-none focus:border-[#006c49] focus:ring-2 focus:ring-[#006c49]/20"
+                  rows={3}
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPlantillaModal(true)}
+                  className="flex-1 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 font-semibold"
+                >
+                  📧 Plantillas
+                </button>
+                <button
+                  onClick={handleEnviarRespuesta}
+                  disabled={!respuesta.trim()}
+                  className="flex-1 px-4 py-2 bg-[#006c49] text-white rounded-lg hover:bg-[#005236] font-semibold disabled:bg-slate-400 disabled:cursor-not-allowed"
+                >
+                  ✉️ Enviar
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 bg-white rounded-lg shadow flex items-center justify-center text-slate-400">
+            <p>Selecciona una conversación para continuar</p>
+          </div>
+        )}
       </div>
 
-      {/* Modal de Plantillas */}
+      {/* Modal Plantillas */}
       {plantillaModal && selectedConversacion && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            {/* Header */}
             <div className="sticky top-0 bg-white border-b border-slate-200 p-6 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-[#182442]">📧 Plantillas por Usar</h3>
+              <h3 className="text-xl font-bold text-[#182442]">📧 Selecciona una Plantilla</h3>
               <button
-                onClick={() => {
-                  setPlantillaModal(false);
-                  setSelectedConversacion(null);
-                }}
-                className="text-slate-400 hover:text-slate-600 text-2xl"
+                onClick={() => setPlantillaModal(false)}
+                className="text-2xl text-slate-400 hover:text-slate-600"
               >
                 ✕
               </button>
             </div>
 
-            {/* Contenido */}
             <div className="p-6 space-y-3">
               {PLANTILLAS_MOCK.map((plantilla) => (
                 <div
                   key={plantilla.id}
                   className="border border-slate-200 rounded-lg p-4 hover:border-[#006c49] hover:shadow-md transition-all cursor-pointer"
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <h4 className="font-semibold text-slate-800">{plantilla.nombre}</h4>
                       <p className="text-sm text-slate-600 mt-1">{plantilla.contenido}</p>
@@ -349,15 +577,20 @@ Descargado: ${new Date().toLocaleString('es-ES')}
                         </span>
                         {plantilla.variables && plantilla.variables.length > 0 && (
                           <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                            Variables: {plantilla.variables.join(', ')}
+                            {plantilla.variables.length} variables
                           </span>
                         )}
                       </div>
                     </div>
                     <button
                       onClick={() => {
-                        navigator.clipboard.writeText(plantilla.contenido);
-                        alert(`✅ Plantilla "${plantilla.nombre}" copiada al portapapeles\n\nVariables: ${plantilla.variables?.join(', ') || 'ninguna'}`);
+                        setPlantillaSeleccionada(plantilla);
+                        if (plantilla.variables && plantilla.variables.length > 0) {
+                          setVariablesModal(true);
+                        } else {
+                          setRespuesta(plantilla.contenido);
+                          setPlantillaModal(false);
+                        }
                       }}
                       className="ml-2 px-3 py-1 bg-[#006c49] text-white rounded text-sm hover:bg-[#005236] whitespace-nowrap"
                     >
@@ -371,12 +604,61 @@ Descargado: ${new Date().toLocaleString('es-ES')}
         </div>
       )}
 
-      {/* Modal de Reasignación */}
+      {/* Modal Variables */}
+      {variablesModal && plantillaSeleccionada && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-bold text-[#182442] mb-4">
+              📝 Personalizar: {plantillaSeleccionada.nombre}
+            </h3>
+
+            <div className="space-y-4 mb-6">
+              {plantillaSeleccionada.variables?.map((variable) => (
+                <div key={variable}>
+                  <label className="block text-sm font-semibold text-[#182442] mb-1">
+                    {variable}
+                  </label>
+                  <input
+                    type="text"
+                    value={variables[variable] || ''}
+                    onChange={(e) => setVariables({ ...variables, [variable]: e.target.value })}
+                    placeholder={`Ingresa ${variable}`}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:border-[#006c49] focus:ring-2 focus:ring-[#006c49]/20"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setVariablesModal(false);
+                  setPlantillaSeleccionada(null);
+                  setVariables({});
+                }}
+                className="flex-1 px-4 py-2 border border-slate-300 text-[#182442] rounded-lg hover:bg-slate-100 font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleAplicarPlantilla}
+                className="flex-1 px-4 py-2 bg-[#006c49] text-white rounded-lg hover:bg-[#005236] font-medium"
+              >
+                Aplicar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Reasignación */}
       {reasignarModal && selectedConversacion && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-bold text-[#182442] mb-4">Reasignar Conversación #{selectedConversacion.id}</h3>
-            <p className="text-sm text-slate-600 mb-4">Vendedor actual: <span className="font-semibold">{selectedConversacion.vendedorAsignadoNombre || 'Sin asignar'}</span></p>
+            <h3 className="text-lg font-bold text-[#182442] mb-4">Reasignar Conversación</h3>
+            <p className="text-sm text-slate-600 mb-4">
+              Vendedor actual: <span className="font-semibold">{selectedConversacion.vendedorAsignadoNombre || 'Sin asignar'}</span>
+            </p>
             
             <label className="block text-sm font-semibold text-[#182442] mb-2">Nuevo Vendedor:</label>
             <select
@@ -394,7 +676,6 @@ Descargado: ${new Date().toLocaleString('es-ES')}
               <button
                 onClick={() => {
                   setReasignarModal(false);
-                  setSelectedConversacion(null);
                   setNuevoVendedorId(null);
                 }}
                 className="flex-1 px-4 py-2 border border-slate-300 text-[#182442] rounded-lg hover:bg-slate-100 font-medium"
