@@ -598,32 +598,32 @@ export const InboxAdmin: React.FC = () => {
         {selectedConversacion ? (
           <div className="flex-1 w-full lg:w-auto bg-white rounded-lg shadow overflow-hidden flex flex-col lg:h-auto h-screen lg:max-h-full">
             {/* Header Chat */}
-            <div className="bg-gradient-to-r from-[#182442] to-[#006c49] text-white px-2 py-0.5 lg:p-4 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-0.5 lg:gap-3 flex-shrink-0">
-              <div>
-                <h3 className="font-bold text-xs lg:text-base truncate">#{selectedConversacion.id} - {selectedConversacion.contactoNombre}</h3>
+            <div className="bg-gradient-to-r from-[#182442] to-[#006c49] text-white px-2 py-1 lg:p-4 flex flex-row lg:flex-row lg:justify-between lg:items-center gap-2 lg:gap-3 flex-shrink-0">
+              <button
+                onClick={() => setSelectedConversacion(null)}
+                className="lg:hidden px-3 py-1 bg-white/30 hover:bg-white/50 rounded text-sm font-semibold transition-colors"
+                title="Volver al listado"
+              >
+                ← Volver
+              </button>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-sm lg:text-base truncate">#{selectedConversacion.id} - {selectedConversacion.contactoNombre}</h3>
                 <p className="text-xs lg:text-sm opacity-90 line-clamp-1">{selectedConversacion.canal} • {selectedConversacion.vendedorAsignadoNombre || 'Sin asignar'}</p>
               </div>
-              <div className="flex gap-0.5 lg:gap-2">
+              <div className="flex gap-1 lg:gap-2 flex-shrink-0">
                 <button
                   onClick={() => setReasignarModal(true)}
-                  className="p-0.5 lg:p-1 bg-white/20 hover:bg-white/30 rounded text-base lg:text-lg"
+                  className="p-1 lg:p-1 bg-white/20 hover:bg-white/30 rounded text-base lg:text-lg"
                   title="Reasignar"
                 >
                   👤
                 </button>
                 <button
                   onClick={() => descargarPDF(selectedConversacion)}
-                  className="p-0.5 lg:p-1 bg-white/20 hover:bg-white/30 rounded text-base lg:text-lg"
+                  className="p-1 lg:p-1 bg-white/20 hover:bg-white/30 rounded text-base lg:text-lg"
                   title="Descargar PDF"
                 >
                   📥
-                </button>
-                <button
-                  onClick={() => setSelectedConversacion(null)}
-                  className="lg:hidden p-0.5 bg-white/20 hover:bg-white/30 rounded text-xs"
-                  title="Volver"
-                >
-                  ← Atrás
                 </button>
               </div>
             </div>
