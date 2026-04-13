@@ -17,7 +17,7 @@ interface Conversacion {
   contactoId: number;
   contactoNombre?: string;
   contactoEmail?: string;
-  estado?: 'activo' | 'cliente' | 'inactivo' | 'calificado';
+  estado?: 'activo' | 'seguimiento' | 'cliente' | 'inactivo';
   etiqueta?: string;
   mensajes?: Mensaje[];
   nombreContacto?: string;
@@ -70,7 +70,7 @@ const PLANTILLAS_MOCK: Plantilla[] = [
 export const InboxVendedor: React.FC<InboxVendedorProps> = ({ vendedorId, vendedorNombre }) => {
   const [conversaciones, setConversaciones] = useState<Conversacion[]>([]);
   const [filtroCanal, setFiltroCanal] = useState<'Todos' | 'Email' | 'WhatsApp'>('Todos');
-  const [filtroEstado, setFiltroEstado] = useState<'Todos' | 'activo' | 'cliente' | 'inactivo' | 'calificado'>('Todos');
+  const [filtroEstado, setFiltroEstado] = useState<'Todos' | 'activo' | 'seguimiento' | 'cliente' | 'inactivo'>('Todos');
   const [filtroBusqueda, setFiltroBusqueda] = useState('');
   const [loading, setLoading] = useState(true);
   
@@ -139,7 +139,7 @@ export const InboxVendedor: React.FC<InboxVendedorProps> = ({ vendedorId, vended
           contactoId: 102,
           contactoNombre: 'María Rodríguez',
           contactoEmail: 'maria.r@company.com',
-          estado: 'calificado',
+          estado: 'seguimiento',
           etiqueta: 'Calificado',
           mensajes: [
             {
@@ -398,16 +398,16 @@ export const InboxVendedor: React.FC<InboxVendedorProps> = ({ vendedorId, vended
   const getBadgeEstado = (estado?: string) => {
     const estados = {
       activo: 'bg-green-100 text-green-800',
+      seguimiento: 'bg-yellow-100 text-yellow-800',
       cliente: 'bg-blue-100 text-blue-800',
-      calificado: 'bg-orange-100 text-orange-800',
       inactivo: 'bg-red-100 text-red-800'
     };
     const estado_final = (estado || 'activo') as keyof typeof estados;
     return (
       <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${estados[estado_final]}`}>
         {estado_final === 'activo' && '🔥'} 
+        {estado_final === 'seguimiento' && '⏳'} 
         {estado_final === 'cliente' && '✅'} 
-        {estado_final === 'calificado' && '⭐'} 
         {estado_final === 'inactivo' && '🔒'} 
         {estado_final}
       </span>
@@ -521,14 +521,14 @@ export const InboxVendedor: React.FC<InboxVendedorProps> = ({ vendedorId, vended
               {[
                 { id: 'Todos', label: 'Todos', color: 'slate' },
                 { id: 'activo', label: 'Activo', color: 'green' },
+                { id: 'seguimiento', label: 'Seguimiento', color: 'yellow' },
                 { id: 'cliente', label: 'Cliente', color: 'blue' },
-                { id: 'calificado', label: 'Calificado', color: 'orange' },
                 { id: 'inactivo', label: 'Inactivo', color: 'red' }
               ].map((opcion) => {
                 const colorClasses: Record<string, string> = {
                   'slate': 'bg-slate-100 text-slate-700 border-slate-300',
                   'green': 'bg-green-100 text-green-700 border-green-300',
-                  'orange': 'bg-orange-100 text-orange-700 border-orange-300',
+                  'yellow': 'bg-yellow-100 text-yellow-700 border-yellow-300',
                   'blue': 'bg-blue-100 text-blue-700 border-blue-300',
                   'red': 'bg-red-100 text-red-700 border-red-300'
                 };
@@ -544,8 +544,8 @@ export const InboxVendedor: React.FC<InboxVendedorProps> = ({ vendedorId, vended
                     }`}
                   >
                     {opcion.id === 'activo' && '🔥'} 
+                    {opcion.id === 'seguimiento' && '⏳'} 
                     {opcion.id === 'cliente' && '✅'} 
-                    {opcion.id === 'calificado' && '⭐'} 
                     {opcion.id === 'inactivo' && '🔒'} 
                     <span className="hidden sm:inline">{opcion.label}</span>
                   </button>
