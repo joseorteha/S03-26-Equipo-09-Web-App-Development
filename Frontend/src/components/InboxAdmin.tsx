@@ -659,27 +659,27 @@ export const InboxAdmin: React.FC = () => {
             </div>
 
             {/* Input Respuesta */}
-            <div className="border-t border-slate-200 px-2 py-1 lg:p-4 space-y-1 lg:space-y-3 bg-white flex-shrink-0">
-              <div className="flex gap-1">
+            <div className="border-t border-slate-200 px-2 py-0.5 lg:p-4 space-y-0.5 lg:space-y-3 bg-white flex-shrink-0">
+              <div className="flex gap-0.5 lg:gap-2">
                 <textarea
                   value={respuesta}
                   onChange={(e) => setRespuesta(e.target.value)}
-                  placeholder="Escribe tu respuesta..."
-                  className="flex-1 px-2 py-1 lg:px-4 lg:py-2 border border-slate-300 rounded lg:rounded-lg resize-none focus:border-[#006c49] focus:ring-1 lg:focus:ring-2 focus:ring-[#006c49]/20 text-xs lg:text-sm"
-                  rows={2}
+                  placeholder="Escribe..."
+                  className="flex-1 px-2 py-0.5 lg:px-4 lg:py-2 border border-slate-300 rounded lg:rounded-lg resize-none focus:border-[#006c49] focus:ring-1 lg:focus:ring-2 focus:ring-[#006c49]/20 text-xs lg:text-sm"
+                  rows={1}
                 />
               </div>
-              <div className="flex flex-col lg:flex-row gap-1 lg:gap-3">
+              <div className="flex flex-col lg:flex-row gap-0.5 lg:gap-3">
                 <button
                   onClick={() => setPlantillaModal(true)}
-                  className="flex-1 px-2 py-1 lg:py-2 lg:px-4 bg-yellow-500 text-white rounded lg:rounded-lg hover:bg-yellow-600 font-semibold text-xs lg:text-sm"
+                  className="flex-1 px-2 py-0.5 lg:py-2 lg:px-4 bg-yellow-500 text-white rounded lg:rounded-lg hover:bg-yellow-600 font-semibold text-xs lg:text-sm"
                 >
                   📧 Plantillas
                 </button>
                 <button
                   onClick={handleEnviarRespuesta}
                   disabled={!respuesta.trim()}
-                  className="flex-1 px-2 py-1 lg:py-2 lg:px-4 bg-[#006c49] text-white rounded lg:rounded-lg hover:bg-[#005236] font-semibold disabled:bg-slate-400 disabled:cursor-not-allowed text-xs lg:text-sm"
+                  className="flex-1 px-2 py-0.5 lg:py-2 lg:px-4 bg-[#006c49] text-white rounded lg:rounded-lg hover:bg-[#005236] font-semibold disabled:bg-slate-400 disabled:cursor-not-allowed text-xs lg:text-sm"
                 >
                   ✉️ Enviar
                 </button>
