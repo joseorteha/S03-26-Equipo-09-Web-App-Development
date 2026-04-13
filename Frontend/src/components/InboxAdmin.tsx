@@ -596,12 +596,12 @@ export const InboxAdmin: React.FC = () => {
 
         {/* Panel de Chat */}
         {selectedConversacion ? (
-          <div className="flex-1 w-full lg:w-auto bg-white rounded-lg shadow overflow-hidden flex flex-col">
+          <div className="flex-1 w-full lg:w-auto bg-white rounded-lg shadow overflow-hidden flex flex-col lg:h-auto h-screen lg:max-h-full">
             {/* Header Chat */}
-            <div className="bg-gradient-to-r from-[#182442] to-[#006c49] text-white p-4 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3">
+            <div className="bg-gradient-to-r from-[#182442] to-[#006c49] text-white p-2 lg:p-4 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-2 lg:gap-3 flex-shrink-0">
               <div>
-                <h3 className="font-bold text-lg lg:text-base">#{selectedConversacion.id} - {selectedConversacion.contactoNombre}</h3>
-                <p className="text-sm opacity-90">{selectedConversacion.canal} • {selectedConversacion.vendedorAsignadoNombre || 'Sin asignar'}</p>
+                <h3 className="font-bold text-base lg:text-base">#{selectedConversacion.id} - {selectedConversacion.contactoNombre}</h3>
+                <p className="text-xs lg:text-sm opacity-90">{selectedConversacion.canal} • {selectedConversacion.vendedorAsignadoNombre || 'Sin asignar'}</p>
               </div>
               <div className="flex gap-2">
                 <button
@@ -629,7 +629,7 @@ export const InboxAdmin: React.FC = () => {
             </div>
 
             {/* Mensajes */}
-            <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-4 bg-slate-50">
+            <div className="flex-1 overflow-y-auto p-2 lg:p-4 space-y-2 lg:space-y-4 bg-slate-50">
               {selectedConversacion.mensajes && selectedConversacion.mensajes.length > 0 ? (
                 selectedConversacion.mensajes.map((msg) => (
                   <div
@@ -637,17 +637,17 @@ export const InboxAdmin: React.FC = () => {
                     className={`flex ${msg.tipo === 'entrada' ? 'justify-start' : 'justify-end'}`}
                   >
                     <div
-                      className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg ${
+                      className={`max-w-xs lg:max-w-md px-3 py-2 lg:py-3 rounded-lg ${
                         msg.tipo === 'entrada'
                           ? 'bg-white border border-slate-200'
                           : 'bg-[#006c49] text-white'
                       }`}
                     >
-                      <p className={`text-xs font-semibold mb-1 ${msg.tipo === 'entrada' ? 'text-slate-600' : 'opacity-90'}`}>
+                      <p className={`text-xs font-semibold mb-0.5 lg:mb-1 ${msg.tipo === 'entrada' ? 'text-slate-600' : 'opacity-90'}`}>
                         {msg.remitente}
                       </p>
-                      <p className="text-sm lg:text-xs break-words">{msg.contenido}</p>
-                      <p className={`text-xs mt-2 ${msg.tipo === 'entrada' ? 'text-slate-400' : 'opacity-75'}`}>
+                      <p className="text-xs lg:text-xs break-words">{msg.contenido}</p>
+                      <p className={`text-xs mt-1 lg:mt-2 ${msg.tipo === 'entrada' ? 'text-slate-400' : 'opacity-75'}`}>
                         {new Date(msg.fechaHora).toLocaleTimeString('es-ES')}
                       </p>
                     </div>
@@ -659,27 +659,27 @@ export const InboxAdmin: React.FC = () => {
             </div>
 
             {/* Input Respuesta */}
-            <div className="border-t border-slate-200 p-4 space-y-3 bg-white">
+            <div className="border-t border-slate-200 p-3 lg:p-4 space-y-2 lg:space-y-3 bg-white flex-shrink-0">
               <div className="flex gap-2">
                 <textarea
                   value={respuesta}
                   onChange={(e) => setRespuesta(e.target.value)}
                   placeholder="Escribe tu respuesta..."
-                  className="flex-1 px-4 py-2 border border-slate-300 rounded-lg resize-none focus:border-[#006c49] focus:ring-2 focus:ring-[#006c49]/20 text-base lg:text-sm"
-                  rows={4}
+                  className="flex-1 px-3 py-2 lg:px-4 lg:py-2 border border-slate-300 rounded-lg resize-none focus:border-[#006c49] focus:ring-2 focus:ring-[#006c49]/20 text-sm lg:text-sm"
+                  rows={3}
                 />
               </div>
-              <div className="flex flex-col lg:flex-row gap-3">
+              <div className="flex flex-col lg:flex-row gap-2 lg:gap-3">
                 <button
                   onClick={() => setPlantillaModal(true)}
-                  className="flex-1 px-4 py-3 lg:py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 font-semibold text-base lg:text-sm"
+                  className="flex-1 px-3 py-2 lg:py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 font-semibold text-sm lg:text-sm"
                 >
                   📧 Plantillas
                 </button>
                 <button
                   onClick={handleEnviarRespuesta}
                   disabled={!respuesta.trim()}
-                  className="flex-1 px-4 py-3 lg:py-2 bg-[#006c49] text-white rounded-lg hover:bg-[#005236] font-semibold disabled:bg-slate-400 disabled:cursor-not-allowed text-base lg:text-sm"
+                  className="flex-1 px-3 py-2 lg:py-2 bg-[#006c49] text-white rounded-lg hover:bg-[#005236] font-semibold disabled:bg-slate-400 disabled:cursor-not-allowed text-sm lg:text-sm"
                 >
                   ✉️ Enviar
                 </button>
