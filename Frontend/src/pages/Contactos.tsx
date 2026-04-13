@@ -190,13 +190,12 @@ export const ContactosPage = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#182442] mb-1">Etiqueta</label>
-            <select className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-[#006c49] focus:ring-2 focus:ring-[#006c49]/20 focus:outline-none transition-all">
-              <option value="">-- Sin etiqueta --</option>
-              <option value="EN_NEGOCIACION">En Negociación</option>
-              <option value="CLIENTE_ACTIVO">Cliente Activo</option>
-              <option value="CLIENTE_RECURRENTE">Cliente Recurrente</option>
-              <option value="RECHAZO_OFERTA">Rechazó Oferta</option>
+            <label className="block text-sm font-medium text-[#182442] mb-1">Etiqueta *</label>
+            <select className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-[#006c49] focus:ring-2 focus:ring-[#006c49]/20 focus:outline-none transition-all" required>
+              <option value="">-- Selecciona una etiqueta --</option>
+              <option value="LEAD_ACTIVO">Lead Activo</option>
+              <option value="CLIENTE">Cliente</option>
+              <option value="INACTIVO">Inactivo</option>
             </select>
           </div>
 
