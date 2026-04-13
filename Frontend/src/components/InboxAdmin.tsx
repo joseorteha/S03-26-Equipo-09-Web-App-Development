@@ -552,11 +552,11 @@ export const InboxAdmin: React.FC = () => {
         </div>
       </div>
 
-      {/* Contenido Principal - Split View */}
-      <div className="flex flex-1 gap-6 overflow-hidden">
+      {/* Contenido Principal - Split View Responsive */}
+      <div className="flex flex-1 gap-4 lg:gap-6 overflow-hidden lg:flex-row flex-col">
         
         {/* Lista de Conversaciones */}
-        <div className="flex-1 bg-white rounded-lg shadow overflow-hidden flex flex-col">
+        <div className={`${selectedConversacion && window.innerWidth < 1024 ? 'hidden lg:flex' : 'flex'} lg:flex-1 w-full bg-white rounded-lg shadow overflow-hidden flex flex-col`}>
           <div className="overflow-y-auto flex-1">
             <div className="divide-y">
               {conversacionesFiltradas.length === 0 ? (
@@ -569,24 +569,24 @@ export const InboxAdmin: React.FC = () => {
                   <div
                     key={conv.id}
                     onClick={() => setSelectedConversacion(conv)}
-                    className={`p-4 cursor-pointer transition-all border-l-4 ${
+                    className={`p-4 lg:p-3 cursor-pointer transition-all border-l-4 ${
                       selectedConversacion?.id === conv.id
                         ? 'bg-slate-50 border-[#006c49] shadow-md'
                         : 'bg-white border-transparent hover:bg-slate-50 border-slate-200'
                     }`}
                   >
-                    <div className="flex justify-between items-start mb-2">
+                    <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-2 mb-2">
                       <div className="flex-1">
-                        <p className="font-semibold text-slate-800">#{conv.id} - {conv.contactoNombre}</p>
+                        <p className="font-semibold text-slate-800 text-base lg:text-sm">#{conv.id} - {conv.contactoNombre}</p>
                         <p className="text-xs text-slate-500">{new Date(conv.fechaHora).toLocaleString('es-ES')}</p>
                       </div>
-                      <div className="flex gap-1 flex-wrap justify-end">
+                      <div className="flex gap-1 flex-wrap">
                         {getBadgeCanal(conv.canal)}
                         {getBadgeEstado(conv.estado)}
                       </div>
                     </div>
-                    <p className="text-sm text-slate-600 line-clamp-2">{conv.contenido}</p>
-                    <p className="text-xs text-slate-500 mt-2">👤 {conv.vendedorAsignadoNombre || 'Sin asignar'}</p>
+                    <p className="text-sm text-slate-600 line-clamp-2 mb-2">{conv.contenido}</p>
+                    <p className="text-xs text-slate-500">👤 {conv.vendedorAsignadoNombre || 'Sin asignar'}</p>
                   </div>
                 ))
               )}
@@ -596,11 +596,11 @@ export const InboxAdmin: React.FC = () => {
 
         {/* Panel de Chat */}
         {selectedConversacion ? (
-          <div className="flex-1 bg-white rounded-lg shadow overflow-hidden flex flex-col">
+          <div className="flex-1 w-full lg:w-auto bg-white rounded-lg shadow overflow-hidden flex flex-col">
             {/* Header Chat */}
-            <div className="bg-gradient-to-r from-[#182442] to-[#006c49] text-white p-4 flex justify-between items-center">
+            <div className="bg-gradient-to-r from-[#182442] to-[#006c49] text-white p-4 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3">
               <div>
-                <h3 className="font-bold text-lg">#{selectedConversacion.id} - {selectedConversacion.contactoNombre}</h3>
+                <h3 className="font-bold text-lg lg:text-base">#{selectedConversacion.id} - {selectedConversacion.contactoNombre}</h3>
                 <p className="text-sm opacity-90">{selectedConversacion.canal} • {selectedConversacion.vendedorAsignadoNombre || 'Sin asignar'}</p>
               </div>
               <div className="flex gap-2">
@@ -617,6 +617,13 @@ export const InboxAdmin: React.FC = () => {
                   title="Descargar PDF"
                 >
                   📥
+                </button>
+                <button
+                  onClick={() => setSelectedConversacion(null)}
+                  className="lg:hidden p-2 bg-white/20 hover:bg-white/30 rounded"
+                  title="Volver"
+                >
+                  ← Atrás
                 </button>
               </div>
             </div>
@@ -680,7 +687,7 @@ export const InboxAdmin: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="flex-1 bg-white rounded-lg shadow flex items-center justify-center text-slate-400">
+          <div className="hidden lg:flex flex-1 bg-white rounded-lg shadow flex items-center justify-center text-slate-400">
             <p>Selecciona una conversación para continuar</p>
           </div>
         )}
