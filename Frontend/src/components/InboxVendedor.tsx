@@ -496,7 +496,12 @@ export const InboxVendedor: React.FC<InboxVendedorProps> = ({ vendedorId, vended
                 >
                   {canal === 'Email' && '✉️'} 
                   {canal === 'WhatsApp' && '📱'} 
-                  {canal === 'Todos' && '📬'} 
+                  {canal === 'Todos' && (
+                    <>
+                      <span className="hidden sm:inline">📬</span>
+                      <span className="sm:hidden">T</span>
+                    </>
+                  )}
                   <span className="hidden sm:inline">{canal}</span>
                 </button>
               ))}
