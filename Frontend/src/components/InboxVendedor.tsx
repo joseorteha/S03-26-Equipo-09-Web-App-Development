@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { conversacionService } from '../common/apiClient';
+import jsPDF from 'jspdf';
+
+interface Mensaje {
+  id: number;
+  contenido: string;
+  fechaHora: string;
+  tipo: 'entrada' | 'salida';
+  remitente: string;
+}
 
 interface Conversacion {
   id: number;
@@ -7,8 +15,19 @@ interface Conversacion {
   contenido: string;
   fechaHora: string;
   contactoId: number;
-  vendedorAsignadoId?: number;
-  vendedorAsignadoNombre?: string;
+  contactoNombre?: string;
+  contactoEmail?: string;
+  estado?: 'activo' | 'seguimiento' | 'cliente' | 'inactivo';
+  mensajes?: Mensaje[];
+  nombreContacto?: string;
+}
+
+interface Plantilla {
+  id: number;
+  nombre: string;
+  contenido: string;
+  canal: 'Email' | 'WhatsApp' | 'Ambos';
+  variables?: string[];
 }
 
 interface InboxVendedorProps {
@@ -16,155 +35,692 @@ interface InboxVendedorProps {
   vendedorNombre: string;
 }
 
+const PLANTILLAS_MOCK: Plantilla[] = [
+  {
+    id: 1,
+    nombre: 'Saludo Inicial',
+    contenido: 'Hola {nombre}, ¡gracias por tu interés! ¿Cómo podemos ayudarte hoy?',
+    canal: 'Ambos',
+    variables: ['nombre']
+  },
+  {
+    id: 2,
+    nombre: 'Seguimiento de Venta',
+    contenido: '¿Tienes alguna pregunta sobre nuestro producto {producto}? Estoy aquí para ayudarte.',
+    canal: 'Email',
+    variables: ['producto']
+  },
+  {
+    id: 3,
+    nombre: 'Disponibilidad',
+    contenido: 'Estoy disponible en {horario}. ¿Te viene bien para una llamada?',
+    canal: 'WhatsApp',
+    variables: ['horario']
+  },
+  {
+    id: 4,
+    nombre: 'Cierre de Venta',
+    contenido: 'Perfecto, procederemos con tu pedido. Recibirás los detalles en tu correo dentro de {tiempo} horas.',
+    canal: 'Ambos',
+    variables: ['tiempo']
+  }
+];
+
 export const InboxVendedor: React.FC<InboxVendedorProps> = ({ vendedorId, vendedorNombre }) => {
   const [conversaciones, setConversaciones] = useState<Conversacion[]>([]);
+  const [filtroCanal, setFiltroCanal] = useState<'Todos' | 'Email' | 'WhatsApp'>('Todos');
+  const [filtroEstado, setFiltroEstado] = useState<'Todos' | 'activo' | 'seguimiento' | 'cliente' | 'inactivo'>('Todos');
+  const [filtroBusqueda, setFiltroBusqueda] = useState('');
   const [loading, setLoading] = useState(true);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  
+  const [selectedConversacion, setSelectedConversacion] = useState<Conversacion | null>(null);
+  const [plantillaModal, setPlantillaModal] = useState(false);
+  const [respuesta, setRespuesta] = useState('');
+  const [variablesModal, setVariablesModal] = useState(false);
+  const [plantillaSeleccionada, setPlantillaSeleccionada] = useState<Plantilla | null>(null);
+  const [variables, setVariables] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
-    cargarConversaciones();
+    cargarDatos();
   }, [vendedorId]);
 
-  const cargarConversaciones = async () => {
+  const cargarDatos = async () => {
     setLoading(true);
     try {
-      const data = await conversacionService.getByVendedor(vendedorId);
-      setConversaciones(data);
+      // Mock data realista con múltiples conversaciones y mensajes
+      const conversacionesMock: Conversacion[] = [
+        {
+          id: 1,
+          canal: 'WhatsApp',
+          contenido: '¿Cuál es el precio de vuestro producto premium?',
+          fechaHora: new Date(Date.now() - 3600000).toISOString(),
+          contactoId: 101,
+          contactoNombre: 'Juan García',
+          contactoEmail: 'juan@example.com',
+          estado: 'activo',
+          mensajes: [
+            {
+              id: 1,
+              contenido: '¿Cuál es el precio de vuestro producto premium?',
+              fechaHora: new Date(Date.now() - 3600000).toISOString(),
+              tipo: 'entrada',
+              remitente: 'Juan García'
+            },
+            {
+              id: 2,
+              contenido: 'Hola Juan, el producto premium tiene un costo de $299.99 al mes. Incluye soporte 24/7 💪',
+              fechaHora: new Date(Date.now() - 3500000).toISOString(),
+              tipo: 'salida',
+              remitente: vendedorNombre
+            },
+            {
+              id: 3,
+              contenido: '¿Hay descuento por pago anual?',
+              fechaHora: new Date(Date.now() - 3400000).toISOString(),
+              tipo: 'entrada',
+              remitente: 'Juan García'
+            },
+            {
+              id: 4,
+              contenido: 'Sí, si pagas anual te damos 20% de descuento. ¿Te interesa iniciar una prueba gratuita?',
+              fechaHora: new Date(Date.now() - 3300000).toISOString(),
+              tipo: 'salida',
+              remitente: vendedorNombre
+            }
+          ]
+        },
+        {
+          id: 2,
+          canal: 'Email',
+          contenido: 'Solicitud de información sobre plan empresarial',
+          fechaHora: new Date(Date.now() - 7200000).toISOString(),
+          contactoId: 102,
+          contactoNombre: 'María Rodríguez',
+          contactoEmail: 'maria.r@company.com',
+          estado: 'seguimiento',
+          mensajes: [
+            {
+              id: 1,
+              contenido: 'Solicitud de información sobre plan empresarial',
+              fechaHora: new Date(Date.now() - 7200000).toISOString(),
+              tipo: 'entrada',
+              remitente: 'María Rodríguez'
+            }
+          ]
+        },
+        {
+          id: 3,
+          canal: 'WhatsApp',
+          contenido: 'Demanda de soporte técnico para integración',
+          fechaHora: new Date(Date.now() - 1800000).toISOString(),
+          contactoId: 103,
+          contactoNombre: 'Roberto Martínez',
+          contactoEmail: 'rob.martinez@startup.io',
+          estado: 'cliente',
+          mensajes: [
+            {
+              id: 1,
+              contenido: 'Tengo un problema con la integración de API',
+              fechaHora: new Date(Date.now() - 1800000).toISOString(),
+              tipo: 'entrada',
+              remitente: 'Roberto Martínez'
+            },
+            {
+              id: 2,
+              contenido: 'Hola Roberto, te envío la documentación y un video tutorial. ¿Qué error específico recibes?',
+              fechaHora: new Date(Date.now() - 1700000).toISOString(),
+              tipo: 'salida',
+              remitente: vendedorNombre
+            },
+            {
+              id: 3,
+              contenido: 'Perfecto, ya funcionó! Muchas gracias',
+              fechaHora: new Date(Date.now() - 1600000).toISOString(),
+              tipo: 'entrada',
+              remitente: 'Roberto Martínez'
+            },
+            {
+              id: 4,
+              contenido: 'De nada! Cualquier otra duda contactame. ¡Que disfrutes! 🚀',
+              fechaHora: new Date(Date.now() - 1500000).toISOString(),
+              tipo: 'salida',
+              remitente: vendedorNombre
+            }
+          ]
+        },
+        {
+          id: 4,
+          canal: 'Email',
+          contenido: 'Renovación de suscripción - Facturación',
+          fechaHora: new Date(Date.now() - 5400000).toISOString(),
+          contactoId: 104,
+          contactoNombre: 'David López',
+          contactoEmail: 'david.lopez@enterprise.com',
+          estado: 'cliente',
+          mensajes: [
+            {
+              id: 1,
+              contenido: 'Hola, necesito renovar mi suscripción. ¿Cómo procedo?',
+              fechaHora: new Date(Date.now() - 5400000).toISOString(),
+              tipo: 'entrada',
+              remitente: 'David López'
+            },
+            {
+              id: 2,
+              contenido: 'Hola David, tu suscripción se renueva automáticamente el próximo mes. Te enviaré el detalle por correo.',
+              fechaHora: new Date(Date.now() - 5300000).toISOString(),
+              tipo: 'salida',
+              remitente: vendedorNombre
+            }
+          ]
+        },
+        {
+          id: 5,
+          canal: 'WhatsApp',
+          contenido: '¿Tienen disponibilidad para llamada de demostración?',
+          fechaHora: new Date(Date.now() - 2700000).toISOString(),
+          contactoId: 105,
+          contactoNombre: 'Laura Fernández',
+          contactoEmail: 'laura.f@techstartup.co',
+          estado: 'inactivo',
+          mensajes: [
+            {
+              id: 1,
+              contenido: '¿Tienen disponibilidad para llamada de demostración?',
+              fechaHora: new Date(Date.now() - 2700000).toISOString(),
+              tipo: 'entrada',
+              remitente: 'Laura Fernández'
+            }
+          ]
+        }
+      ];
+
+      setConversaciones(conversacionesMock);
     } catch (error) {
-      console.error('Error cargando conversaciones:', error);
+      console.error('Error cargando datos:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const formatearFecha = (fecha: string) => {
-    return new Date(fecha).toLocaleString('es-ES');
+  const conversacionesFiltradas = conversaciones.filter(c => {
+    const cumpleCanal = filtroCanal === 'Todos' || c.canal === filtroCanal;
+    const cumpleEstado = filtroEstado === 'Todos' || c.estado === filtroEstado;
+    const cumpleBusqueda = !filtroBusqueda || 
+      c.contenido.toLowerCase().includes(filtroBusqueda.toLowerCase()) ||
+      c.contactoNombre?.toLowerCase().includes(filtroBusqueda.toLowerCase());
+    
+    return cumpleCanal && cumpleEstado && cumpleBusqueda;
+  });
+
+  const handleAplicarPlantilla = () => {
+    if (!plantillaSeleccionada) return;
+    
+    let contenido = plantillaSeleccionada.contenido;
+    Object.entries(variables).forEach(([key, value]) => {
+      contenido = contenido.replace(`{${key}}`, value);
+    });
+    
+    setRespuesta(contenido);
+    setVariablesModal(false);
+    setPlantillaSeleccionada(null);
+    setVariables({});
+  };
+
+  const handleEnviarRespuesta = async () => {
+    if (!selectedConversacion || !respuesta.trim()) return;
+
+    // Agregar mensaje a la conversación
+    const nuevoMensaje: Mensaje = {
+      id: (selectedConversacion.mensajes?.length || 0) + 1,
+      contenido: respuesta,
+      fechaHora: new Date().toISOString(),
+      tipo: 'salida',
+      remitente: vendedorNombre
+    };
+
+    const conversacionActualizada: Conversacion = {
+      ...selectedConversacion,
+      mensajes: [...(selectedConversacion.mensajes || []), nuevoMensaje],
+      estado: selectedConversacion.estado || 'activo'
+    };
+
+    setSelectedConversacion(conversacionActualizada);
+    setRespuesta('');
+
+    // Actualizar en lista
+    setConversaciones(conversaciones.map(c => 
+      c.id === selectedConversacion.id ? conversacionActualizada : c
+    ));
+  };
+
+  const descargarPDF = (conversacion: Conversacion) => {
+    try {
+      const doc = new jsPDF();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let yPosition = 20;
+
+      // Header
+      doc.setFillColor(24, 36, 66);
+      doc.rect(0, 0, pageWidth, 30, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(20);
+      doc.text('Reporte de Conversación', 15, 22);
+
+      yPosition = 45;
+      
+      // Información general
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Información General:', 15, yPosition);
+      yPosition += 8;
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.text(`ID: ${conversacion.id}`, 20, yPosition);
+      yPosition += 6;
+      doc.text(`Canal: ${conversacion.canal}`, 20, yPosition);
+      yPosition += 6;
+      doc.text(`Contacto: ${conversacion.contactoNombre || 'Desconocido'}`, 20, yPosition);
+      yPosition += 6;
+      doc.text(`Estado: ${conversacion.estado || 'activo'}`, 20, yPosition);
+      yPosition += 6;
+      const fechaConv = new Date(conversacion.fechaHora).toLocaleDateString('es-ES');
+      doc.text(`Fecha: ${fechaConv}`, 20, yPosition);
+      yPosition += 10;
+
+      // Historial de mensajes
+      doc.setFont('helvetica', 'bold');
+      doc.text('Historial de Conversación:', 15, yPosition);
+      yPosition += 8;
+
+      doc.setFont('helvetica', 'normal');
+      
+      if (conversacion.mensajes && conversacion.mensajes.length > 0) {
+        conversacion.mensajes.forEach((msg) => {
+          const texto = `${msg.remitente}: ${msg.contenido}`;
+          const lineas = doc.splitTextToSize(texto, pageWidth - 30) as string[];
+          
+          if (yPosition + (lineas.length * 6) > pageHeight - 20) {
+            doc.addPage();
+            yPosition = 20;
+          }
+
+          const colors = msg.tipo === 'entrada' ? [240, 240, 240] : [220, 240, 220];
+          doc.setFillColor(colors[0] || 0, colors[1] || 0, colors[2] || 0);
+          doc.rect(15, yPosition - 2, pageWidth - 30, (lineas.length * 6) + 2, 'F');
+          
+          doc.text(lineas as any, 20, yPosition);
+          yPosition += (lineas.length * 6) + 3;
+          
+          doc.setFontSize(8);
+          doc.setTextColor(150, 150, 150);
+          const fechaFormato = new Date(msg.fechaHora).toLocaleDateString('es-ES');
+          doc.text(fechaFormato, 20, yPosition);
+          yPosition += 4;
+          doc.setFontSize(10);
+          doc.setTextColor(0, 0, 0);
+        });
+      } else {
+        doc.text(conversacion.contenido || 'Sin contenido', 20, yPosition);
+        yPosition += 6;
+      }
+
+      // Footer
+      yPosition = pageHeight - 15;
+      doc.setFontSize(9);
+      doc.setTextColor(150, 150, 150);
+      const footerDate = new Date().toLocaleDateString('es-ES');
+      doc.text(`Descargado: ${footerDate}`, 15, yPosition);
+
+      doc.save(`conversacion_${conversacion.id}_${new Date().getTime()}.pdf`);
+    } catch (error) {
+      console.error('Error descargando PDF:', error);
+      alert('Error al descargar el PDF');
+    }
   };
 
   const getBadgeCanal = (canal: string) => {
     if (canal === 'WhatsApp') {
-      return <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">📱 WhatsApp</span>;
+      return <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">📱 WhatsApp</span>;
     }
-    return <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">✉️ Email</span>;
+    return <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800">✉️ Email</span>;
   };
 
-  if (loading) return <div className="text-center py-8">Cargando conversaciones...</div>;
+  const getBadgeEstado = (estado?: string) => {
+    const estados = {
+      activo: 'bg-green-100 text-green-800',
+      seguimiento: 'bg-yellow-100 text-yellow-800',
+      cliente: 'bg-blue-100 text-blue-800',
+      inactivo: 'bg-gray-100 text-gray-800'
+    };
+    const estado_final = (estado || 'activo') as keyof typeof estados;
+    return (
+      <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${estados[estado_final]}`}>
+        {estado_final === 'activo' && '🔥'} 
+        {estado_final === 'seguimiento' && '⏳'} 
+        {estado_final === 'cliente' && '✅'} 
+        {estado_final === 'inactivo' && '⏸️'} 
+        {estado_final}
+      </span>
+    );
+  };
+
+  if (loading) return <div className="text-center py-8 text-slate-600">Cargando conversaciones...</div>;
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold">💬 Mi Inbox</h2>
-        <p className="text-sm text-gray-600 mt-1">Vendedor: {vendedorNombre}</p>
+    <div className="space-y-6 min-h-[calc(100vh-120px)] max-h-screen flex flex-col overflow-y-auto">
+      {/* Header */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h1 className="text-3xl font-bold text-[#182442]">💬 Mi Inbox</h1>
+        <p className="text-slate-600 mt-1">Vendedor: {vendedorNombre}</p>
       </div>
 
-      {/* Resumen */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="text-2xl font-bold text-blue-600">{conversaciones.length}</div>
-          <div className="text-sm text-gray-600">Conversaciones totales</div>
+      {/* Filtros */}
+      <div className="bg-white rounded-lg shadow p-6 space-y-4">
+        {/* Búsqueda */}
+        <div>
+          <input
+            type="text"
+            placeholder="🔍 Buscar por mensaje, contacto..."
+            value={filtroBusqueda}
+            onChange={(e) => setFiltroBusqueda(e.target.value)}
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:border-[#006c49] focus:ring-2 focus:ring-[#006c49]/20"
+          />
         </div>
-        <div className="bg-green-50 rounded-lg p-4">
-          <div className="text-2xl font-bold text-green-600">
-            {conversaciones.filter(c => c.canal === 'WhatsApp').length}
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Filtro Canal */}
+          <div>
+            <label className="block text-xs font-semibold text-[#182442] mb-2">Canal</label>
+            <div className="flex gap-1 flex-wrap">
+              {['Todos', 'Email', 'WhatsApp'].map((canal) => (
+                <button
+                  key={canal}
+                  onClick={() => setFiltroCanal(canal as 'Todos' | 'Email' | 'WhatsApp')}
+                  className={`px-2 py-1 rounded text-xs font-semibold ${
+                    filtroCanal === canal
+                      ? 'bg-[#006c49] text-white'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  {canal}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="text-sm text-gray-600">WhatsApp</div>
-        </div>
-        <div className="bg-purple-50 rounded-lg p-4">
-          <div className="text-2xl font-bold text-purple-600">
-            {conversaciones.filter(c => c.canal === 'Email').length}
+
+          {/* Filtro Estado */}
+          <div className="md:col-span-2">
+            <label className="block text-xs font-semibold text-[#182442] mb-2">Estado</label>
+            <div className="flex gap-1 flex-wrap">
+              {['Todos', 'activo', 'seguimiento', 'cliente', 'inactivo'].map((estado) => (
+                <button
+                  key={estado}
+                  onClick={() => setFiltroEstado(estado as any)}
+                  className={`px-2 py-1 rounded text-xs font-semibold ${
+                    filtroEstado === estado
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+                  }`}
+                >
+                  {estado === 'activo' && '🔥'} 
+                  {estado === 'seguimiento' && '⏳'} 
+                  {estado === 'cliente' && '✅'} 
+                  {estado === 'inactivo' && '⏸️'} 
+                  {estado}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="text-sm text-gray-600">Email</div>
+
+          {/* Info */}
+          <div className="flex items-end">
+            <p className="text-xs text-slate-600">
+              <span className="font-bold text-[#006c49]">{conversacionesFiltradas.length}</span> conversaciones
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Lista de Conversaciones */}
-      <div className="space-y-3">
-        {conversaciones.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            No tienes conversaciones asignadas en este momento
-          </div>
-        ) : (
-          conversaciones.map((conv) => (
-            <div
-              key={conv.id}
-              className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
-            >
-              {/* Header de la conversación */}
-              <div
-                onClick={() => setExpandedId(expandedId === conv.id ? null : conv.id)}
-                className="p-4 cursor-pointer bg-gray-50 hover:bg-gray-100 flex items-center justify-between"
-              >
-                <div className="flex items-center gap-4 flex-1">
-                  <div className="font-bold text-blue-600 min-w-10">#{conv.id}</div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      {getBadgeCanal(conv.canal)}
-                      <span className="text-xs text-gray-500">
-                        Contacto ID: {conv.contactoId}
-                      </span>
+      {/* Contenido Principal - Split View Responsive */}
+      <div className="flex flex-1 gap-4 lg:gap-6 overflow-auto lg:overflow-hidden lg:flex-row flex-col">
+        
+        {/* Lista de Conversaciones */}
+        <div className={`${selectedConversacion && window.innerWidth < 1024 ? 'hidden lg:flex' : 'flex'} lg:flex-1 w-full bg-white rounded-lg shadow overflow-hidden flex flex-col`}>
+          <div className="overflow-y-auto flex-1">
+            <div className="divide-y">
+              {conversacionesFiltradas.length === 0 ? (
+                <div className="p-8 text-center text-slate-500">
+                  <p className="text-lg font-medium">No hay conversaciones</p>
+                  <p className="text-sm">Ajusta los filtros</p>
+                </div>
+              ) : (
+                conversacionesFiltradas.map((conv) => (
+                  <div
+                    key={conv.id}
+                    onClick={() => setSelectedConversacion(conv)}
+                    className={`p-4 lg:p-3 cursor-pointer transition-all border-l-4 ${
+                      selectedConversacion?.id === conv.id
+                        ? 'bg-slate-50 border-[#006c49] shadow-md'
+                        : 'bg-white border-transparent hover:bg-slate-50 border-slate-200'
+                    }`}
+                  >
+                    <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-2 mb-2">
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-800 text-base lg:text-sm">#{conv.id} - {conv.contactoNombre}</p>
+                        <p className="text-xs text-slate-500">{new Date(conv.fechaHora).toLocaleString('es-ES')}</p>
+                      </div>
+                      <div className="flex gap-1 flex-wrap">
+                        {getBadgeCanal(conv.canal)}
+                        {getBadgeEstado(conv.estado)}
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-700 line-clamp-1">{conv.contenido}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {formatearFecha(conv.fechaHora)}
-                    </p>
+                    <p className="text-sm text-slate-600 line-clamp-2 mb-2">{conv.contenido}</p>
                   </div>
-                </div>
-                <div className="text-gray-400">
-                  {expandedId === conv.id ? '▼' : '▶'}
-                </div>
-              </div>
-
-              {/* Detalles extendidos */}
-              {expandedId === conv.id && (
-                <div className="p-4 border-t border-gray-200 bg-white">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">
-                        MENSAJE COMPLETO
-                      </label>
-                      <p className="text-sm bg-gray-50 p-3 rounded text-gray-800 whitespace-pre-wrap">
-                        {conv.contenido}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1">
-                          CANAL
-                        </label>
-                        <p className="text-sm text-gray-800">{getBadgeCanal(conv.canal)}</p>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1">
-                          CONTACTO ID
-                        </label>
-                        <p className="text-sm text-gray-800">{conv.contactoId}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <label className="block text-xs font-semibold text-gray-600 mb-1">
-                          FECHA Y HORA
-                        </label>
-                        <p className="text-sm text-gray-800">
-                          {formatearFecha(conv.fechaHora)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 pt-2 border-t">
-                      <button className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
-                        ↩️ Responder
-                      </button>
-                      <button className="flex-1 px-3 py-2 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300">
-                        ⭐ Marcar
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                ))
               )}
             </div>
-          ))
+          </div>
+        </div>
+
+        {/* Panel de Chat */}
+        {selectedConversacion ? (
+          <div className="flex-1 w-full lg:w-auto bg-white rounded-lg shadow overflow-hidden flex flex-col max-h-[calc(100vh-240px)] lg:max-h-none lg:min-h-full">
+            {/* Header Chat */}
+            <div className="bg-gradient-to-r from-[#182442] to-[#006c49] text-white px-3 py-1.5 lg:p-4 flex flex-row lg:flex-row lg:justify-between lg:items-center gap-2 lg:gap-3 flex-shrink-0">
+              <button
+                onClick={() => setSelectedConversacion(null)}
+                className="lg:hidden px-3 py-2 bg-white/30 hover:bg-white/50 rounded text-sm font-semibold transition-colors"
+                title="Volver al listado"
+              >
+                ← Volver
+              </button>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-xs lg:text-base truncate">#{selectedConversacion.id} - {selectedConversacion.contactoNombre}</h3>
+                <p className="text-xs lg:text-sm opacity-90 line-clamp-1 hidden lg:block">{selectedConversacion.canal} • {selectedConversacion.estado}</p>
+              </div>
+              <div className="flex gap-0.5 lg:gap-2 flex-shrink-0">
+                <button
+                  onClick={() => descargarPDF(selectedConversacion)}
+                  className="p-0.5 lg:p-1 bg-white/20 hover:bg-white/30 rounded text-base lg:text-lg"
+                  title="Descargar PDF"
+                >
+                  📥
+                </button>
+              </div>
+            </div>
+
+            {/* Mensajes */}
+            <div className="flex-1 overflow-y-auto p-5 lg:p-7 space-y-3 lg:space-y-4 bg-slate-50">
+              {selectedConversacion.mensajes && selectedConversacion.mensajes.length > 0 ? (
+                selectedConversacion.mensajes.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex ${msg.tipo === 'entrada' ? 'justify-start' : 'justify-end'}`}
+                  >
+                    <div
+                      className={`max-w-2xl lg:max-w-2xl px-4 py-3 lg:px-5 lg:py-4 rounded-lg ${
+                        msg.tipo === 'entrada'
+                          ? 'bg-white border border-slate-200'
+                          : 'bg-[#006c49] text-white'
+                      }`}
+                    >
+                      <p className={`text-xs lg:text-sm font-semibold mb-1 lg:mb-1 ${msg.tipo === 'entrada' ? 'text-slate-600' : 'opacity-90'}`}>
+                        {msg.remitente}
+                      </p>
+                      <p className="text-sm lg:text-sm break-words">{msg.contenido}</p>
+                      <p className={`text-xs mt-2 lg:mt-2 ${msg.tipo === 'entrada' ? 'text-slate-400' : 'opacity-75'}`}>
+                        {new Date(msg.fechaHora).toLocaleTimeString('es-ES')}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-slate-400 text-sm">No hay mensajes</div>
+              )}
+            </div>
+
+            {/* Input Respuesta */}
+            <div className="border-t border-slate-200 px-3 py-2 lg:p-4 space-y-2 lg:space-y-3 bg-white flex-shrink-0">
+              <div className="flex gap-2 lg:gap-3">
+                <textarea
+                  value={respuesta}
+                  onChange={(e) => setRespuesta(e.target.value)}
+                  placeholder="Escribe tu respuesta..."
+                  className="flex-1 px-3 py-2 lg:px-4 lg:py-2 border border-slate-300 rounded lg:rounded-lg resize-none focus:border-[#006c49] focus:ring-1 lg:focus:ring-2 focus:ring-[#006c49]/20 text-sm lg:text-sm"
+                  rows={3}
+                />
+              </div>
+              <div className="flex flex-col lg:flex-row gap-2 lg:gap-3">
+                <button
+                  onClick={() => setPlantillaModal(true)}
+                  className="flex-1 px-2 py-2 lg:py-2 lg:px-4 bg-yellow-500 text-white rounded lg:rounded-lg hover:bg-yellow-600 font-semibold text-xs lg:text-sm transition-colors"
+                >
+                  📧 Plantillas
+                </button>
+                <button
+                  onClick={handleEnviarRespuesta}
+                  disabled={!respuesta.trim()}
+                  className="flex-1 px-2 py-2 lg:py-2 lg:px-4 bg-[#006c49] text-white rounded lg:rounded-lg hover:bg-[#005236] font-semibold disabled:bg-slate-400 disabled:cursor-not-allowed text-xs lg:text-sm transition-colors"
+                >
+                  ✉️ Enviar
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="hidden lg:flex flex-1 bg-white rounded-lg shadow flex items-center justify-center text-slate-400">
+            <p>Selecciona una conversación para continuar</p>
+          </div>
         )}
       </div>
+
+      {/* Modal Plantillas */}
+      {plantillaModal && selectedConversacion && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-slate-200 p-6 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-[#182442]">📧 Selecciona una Plantilla</h3>
+              <button
+                onClick={() => setPlantillaModal(false)}
+                className="text-2xl text-slate-400 hover:text-slate-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 space-y-3">
+              {PLANTILLAS_MOCK.map((plantilla) => (
+                <div
+                  key={plantilla.id}
+                  className="border border-slate-200 rounded-lg p-4 hover:border-[#006c49] hover:shadow-md transition-all cursor-pointer"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-slate-800">{plantilla.nombre}</h4>
+                      <p className="text-sm text-slate-600 mt-1">{plantilla.contenido}</p>
+                      <div className="flex gap-2 mt-2">
+                        <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                          {plantilla.canal}
+                        </span>
+                        {plantilla.variables && plantilla.variables.length > 0 && (
+                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                            {plantilla.variables.length} variables
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setPlantillaSeleccionada(plantilla);
+                        if (plantilla.variables && plantilla.variables.length > 0) {
+                          setVariablesModal(true);
+                        } else {
+                          setRespuesta(plantilla.contenido);
+                          setPlantillaModal(false);
+                        }
+                      }}
+                      className="ml-2 px-3 py-1 bg-[#006c49] text-white rounded text-sm hover:bg-[#005236] whitespace-nowrap"
+                    >
+                      Usar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Variables */}
+      {variablesModal && plantillaSeleccionada && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-bold text-[#182442] mb-4">
+              📝 Personalizar: {plantillaSeleccionada.nombre}
+            </h3>
+
+            <div className="space-y-4 mb-6">
+              {plantillaSeleccionada.variables?.map((variable) => (
+                <div key={variable}>
+                  <label className="block text-sm font-semibold text-[#182442] mb-1">
+                    {variable}
+                  </label>
+                  <input
+                    type="text"
+                    value={variables[variable] || ''}
+                    onChange={(e) => setVariables({ ...variables, [variable]: e.target.value })}
+                    placeholder={`Ingresa ${variable}`}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:border-[#006c49] focus:ring-2 focus:ring-[#006c49]/20"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setVariablesModal(false);
+                  setPlantillaSeleccionada(null);
+                  setVariables({});
+                }}
+                className="flex-1 px-4 py-2 border border-slate-300 text-[#182442] rounded-lg hover:bg-slate-100 font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleAplicarPlantilla}
+                className="flex-1 px-4 py-2 bg-[#006c49] text-white rounded-lg hover:bg-[#005236] font-medium"
+              >
+                Aplicar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
