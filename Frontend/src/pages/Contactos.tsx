@@ -15,18 +15,17 @@ const VENDEDORES_MOCK = [
 
 export const ContactosPage = () => {
   const { isAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState<'lead-activo' | 'en-seguimiento' | 'cliente' | 'inactivo' | 'calificado'>('lead-activo');
+  const [activeTab, setActiveTab] = useState<'lead-activo' | 'cliente' | 'inactivo' | 'calificado'>('lead-activo');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVendedor, setSelectedVendedor] = useState<string>(''); // Filtro para Admin
   const [newLeadVendedor, setNewLeadVendedor] = useState<string>(''); // Selector en form para Admin
 
-  // Definir tabs con los 5 nuevos estados operativos
+  // Definir tabs con los 4 nuevos estados operativos
   const tabs = [
     { id: 'lead-activo' as const, label: 'Lead Activo', icon: 'new_releases', color: 'blue', description: 'Recién capturados' },
-    { id: 'en-seguimiento' as const, label: 'En Seguimiento', icon: 'schedule', color: 'yellow', description: 'Con actividad reciente' },
     { id: 'cliente' as const, label: 'Cliente', icon: 'star', color: 'green', description: 'Compra finalizada' },
-    { id: 'inactivo' as const, label: 'Inactivo', icon: 'block', color: 'red', description: 'Bloqueados o sin respuesta' },
-    { id: 'calificado' as const, label: 'Calificado', icon: 'check_circle', color: 'orange', description: '7+ días sin respuesta' }
+    { id: 'calificado' as const, label: 'Calificado', icon: 'check_circle', color: 'orange', description: 'Leads cualificados' },
+    { id: 'inactivo' as const, label: 'Inactivo', icon: 'block', color: 'red', description: 'Bloqueados o sin respuesta' }
   ];
 
   const getColorClasses = (color: string, isActive: boolean): string => {
@@ -67,8 +66,8 @@ export const ContactosPage = () => {
           </h1>
           <p className="text-slate-600 text-base mt-1">
             {isAdmin 
-              ? 'Administra todos los leads del equipo en 5 estados'
-              : 'Administra tus leads en 5 estados: Activo, Seguimiento, Cliente, Inactivo, Calificado'
+              ? 'Administra todos los leads del equipo en 4 estados'
+              : 'Administra tus leads en 4 estados: Activo, Cliente, Calificado, Inactivo'
             }
           </p>
         </div>
@@ -133,26 +132,20 @@ export const ContactosPage = () => {
         {activeTab === 'lead-activo' && (
           <ContactoTable />
         )}
-        {activeTab === 'en-seguimiento' && (
-          <div className="text-center py-12">
-            <p className="text-slate-500 text-base mb-2">No hay leads en seguimiento</p>
-            <p className="text-slate-400 text-sm">Los leads con actividad reciente aparecerán aquí</p>
-          </div>
-        )}
         {activeTab === 'cliente' && (
           <div className="text-center py-12">
             <p className="text-slate-500 text-base mb-2">No hay leads en estado cliente</p>
             <p className="text-slate-400 text-sm">Los leads que completaron una compra aparecerán aquí</p>
           </div>
         )}
+        {activeTab === 'calificado' && (
+          <CalificadoPanel />
+        )}
         {activeTab === 'inactivo' && (
           <div className="text-center py-12">
             <p className="text-slate-500 text-base mb-2">No hay leads inactivos</p>
             <p className="text-slate-400 text-sm">Los leads bloqueados, que se retiraron o sin actividad aparecerán aquí</p>
           </div>
-        )}
-        {activeTab === 'calificado' && (
-          <CalificadoPanel />
         )}
       </div>
 
@@ -193,9 +186,9 @@ export const ContactosPage = () => {
             <label className="block text-sm font-medium text-[#182442] mb-1">Estado Inicial</label>
             <select className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-[#006c49] focus:ring-2 focus:ring-[#006c49]/20 focus:outline-none transition-all">
               <option value="LEAD_ACTIVO">Lead Activo</option>
-              <option value="EN_SEGUIMIENTO">En Seguimiento</option>
               <option value="CALIFICADO">Calificado</option>
               <option value="CLIENTE">Cliente</option>
+              <option value="INACTIVO">Inactivo</option>
             </select>
           </div>
 
