@@ -26,3 +26,17 @@ VALUES
 (1, false, '2026-03-25', 'Llamar a Carlos para seguimiento', 1),
 (2, false, '2026-03-28', 'Revisar propuesta enviada a María', 2),
 (3, true, '2026-03-23', 'Confirmar entrega con Juan', 3);
+
+-- Plantillas de Email
+INSERT INTO plantillas (nombre, tipo, asunto, contenido, activa, created_at, updated_at)
+VALUES
+('Bienvenida', 'EMAIL', 'Bienvenido a nuestro CRM', 'Hola {nombre}, bienvenido a nuestro servicio. Estamos emocionados de trabajar contigo. Tu cuenta ha sido creada exitosamente.', true, NOW(), NOW()),
+('Seguimiento', 'EMAIL', 'Seguimiento de tu solicitud', 'Hola {nombre}, queremos darte un seguimiento sobre tu solicitud. ¿Hay algo en lo que podamos ayudarte? No dude en contactarnos.', true, NOW(), NOW()),
+('Cierre de Venta', 'EMAIL', 'Confirmación de tu compra', 'Hola {nombre}, gracias por tu compra. Tu pedido ha sido confirmado. Puedes rastrear tu envío usando el número de referencia: {referencia}', true, NOW(), NOW());
+
+-- Plantillas de WhatsApp
+INSERT INTO plantillas (nombre, tipo, asunto, contenido, activa, created_at, updated_at)
+VALUES
+('Oferta WhatsApp', 'WHATSAPP', null, 'Hola {nombre}! 🚀 Tenemos una oferta especial solo para ti: {oferta}. ¿Te gustaría conocer más detalles? 💬', true, NOW(), NOW()),
+('Recordatorio', 'WHATSAPP', null, 'Hola {nombre}, solo recordarte que tienes una reunión programada para {fecha} a las {hora}. ¿Está de acuerdo con estos detalles? ✋', true, NOW(), NOW()),
+('Agradecimiento', 'WHATSAPP', null, 'Hola {nombre}! Gracias por ser parte de nuestro equipo. Valoramos tu confianza y apoyo. 🙏 ¿Hay algo en lo que podamos ayudarte?', true, NOW(), NOW());
