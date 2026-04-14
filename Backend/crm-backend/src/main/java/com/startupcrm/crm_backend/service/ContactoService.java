@@ -1,9 +1,12 @@
 package com.startupcrm.crm_backend.service;
 
+import com.startupcrm.crm_backend.dto.ContactoDTO;
 import com.startupcrm.crm_backend.exception.ResourceNotFoundException;
 import com.startupcrm.crm_backend.model.Contacto;
 import com.startupcrm.crm_backend.model.EstadoLead;
+import com.startupcrm.crm_backend.model.Usuario;
 import com.startupcrm.crm_backend.repository.ContactoRepository;
+import com.startupcrm.crm_backend.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,9 +15,11 @@ import java.util.List;
 public class ContactoService {
 
     private final ContactoRepository contactoRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    public ContactoService(ContactoRepository contactoRepository) {
+    public ContactoService(ContactoRepository contactoRepository, UsuarioRepository usuarioRepository) {
         this.contactoRepository = contactoRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     public List<Contacto> getAll() {
@@ -31,16 +36,25 @@ public class ContactoService {
         return contactoRepository.save(contacto);
     }
 
-    public Contacto update(Long id, Contacto contacto) {
+    public Contacto update(Long id, ContactoDTO dto) {
 
         Contacto existente = contactoRepository.findById(id)
                 //.orElseThrow(() -> new RuntimeException("Contacto no encontrado"));
                 .orElseThrow(() -> new ResourceNotFoundException("Contacto no encontrado"));
 
-        existente.setNombre(contacto.getNombre());
-        existente.setEmail(contacto.getEmail());
-        existente.setTelefono(contacto.getTelefono());
-        existente.setEstado(contacto.getEstado());
+        existente.setNombre(dto.getNombre());
+        existente.setEmail(dto.getEmail());
+        existente.setTelefono(dto.getTelefono());
+        existente.setEstado(dto.getEstado());
+
+        // Resolver vendedor asignado si viene en el DTO
+        if (dto.getVendedorAsignadoId() != null) {
+            Usuario vendedor = usuarioRepository.findById(dto.getVendedorAsignadoId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Vendedor no encontrado"));
+            existente.setVendedorAsignado(vendedor);
+        } else {
+            existente.setVendedorAsignado(null);
+        }
 
         return contactoRepository.save(existente);
     }

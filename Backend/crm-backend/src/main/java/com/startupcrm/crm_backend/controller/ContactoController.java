@@ -73,8 +73,7 @@ public class ContactoController {
 
     @PutMapping("/{id}")
     public ApiResponse<ContactoDTO> update(@PathVariable Long id, @Valid @RequestBody ContactoDTO dto) {
-        Contacto contacto = ContactoMapper.toEntity(dto);
-        Contacto updated = contactoService.update(id, contacto);
+        Contacto updated = contactoService.update(id, dto);
         return new ApiResponse<>(true, ContactoMapper.toDTO(updated), null);
     }
 
