@@ -8,3 +8,6 @@ export interface DashboardStats {
   tareasPendientes: number;
   contactosPorEstado: Record<EstadoLead, number>;
 }
+
+// Re-export all types from types module
+export * from './types/types';

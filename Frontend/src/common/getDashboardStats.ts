@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import type { ApiResponse } from './types';
+import type { ApiResponse } from './types/types';
 
 export interface DashboardStats {
   totalLeads: number;
