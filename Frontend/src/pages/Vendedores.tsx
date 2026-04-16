@@ -61,9 +61,18 @@ export const Vendedores = () => {
 
   // Manejar toggle de estado
   const handleToggleEstado = async (id: number) => {
-    const resultado = await toggleVendedorEstado(id);
-    if (resultado) {
-      console.log('✅ Estado actualizado');
+    try {
+      const resultado = await toggleVendedorEstado(id);
+      if (resultado) {
+        const vendedor = vendedores.find(v => v.id === id);
+        console.log(`✅ Vendedor ${vendedor?.nombre} ${vendedor?.activo ? 'desactivado' : 'activado'}`);
+      } else {
+        console.error('❌ Error al cambiar estado');
+        alert('❌ Error al cambiar estado del vendedor');
+      }
+    } catch (error) {
+      console.error('❌ Error:', error);
+      alert('❌ Error al procesar la solicitud');
     }
   };
 

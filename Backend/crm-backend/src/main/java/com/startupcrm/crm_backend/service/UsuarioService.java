@@ -43,10 +43,20 @@ public class UsuarioService {
         Usuario existente = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
-        existente.setNombre(usuarioDetails.getNombre());
-        existente.setEmail(usuarioDetails.getEmail());
-        existente.setTelefono(usuarioDetails.getTelefono());
-        existente.setActivo(usuarioDetails.getActivo());
+        // Hacer updates parciales - solo actualizar campos que NO sean null
+        if (usuarioDetails.getNombre() != null && !usuarioDetails.getNombre().isBlank()) {
+            existente.setNombre(usuarioDetails.getNombre());
+        }
+        if (usuarioDetails.getEmail() != null && !usuarioDetails.getEmail().isBlank()) {
+            existente.setEmail(usuarioDetails.getEmail());
+        }
+        if (usuarioDetails.getTelefono() != null) {
+            existente.setTelefono(usuarioDetails.getTelefono());
+        }
+        // El campo activo se actualiza siempre si viene en la solicitud
+        if (usuarioDetails.getActivo() != null) {
+            existente.setActivo(usuarioDetails.getActivo());
+        }
 
         return usuarioRepository.save(existente);
     }

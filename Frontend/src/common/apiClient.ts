@@ -96,9 +96,13 @@ export const contactoService = {
 
   // Crear contacto
   create: async (contacto: { nombre: string; email: string; telefono: string; estado: string; vendedorAsignadoId?: number }): Promise<Contacto> => {
+    const token = localStorage.getItem('authToken');
     const response = await fetch(`${API_BASE_URL}/contactos`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify(contacto)
     });
     
@@ -120,9 +124,13 @@ export const contactoService = {
 
   // Actualizar contacto
   update: async (id: number, contacto: Partial<Contacto>): Promise<Contacto> => {
+    const token = localStorage.getItem('authToken');
     const response = await fetch(`${API_BASE_URL}/contactos/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify(contacto)
     });
     const data = (await response.json()) as ApiResponse<Contacto>;
@@ -131,7 +139,13 @@ export const contactoService = {
 
   // Eliminar contacto
   delete: async (id: number): Promise<void> => {
-    await fetch(`${API_BASE_URL}/contactos/${id}`, { method: 'DELETE' });
+    const token = localStorage.getItem('authToken');
+    await fetch(`${API_BASE_URL}/contactos/${id}`, { 
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
   },
 
   // Segmentación: Obtener por estado

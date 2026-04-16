@@ -29,12 +29,16 @@ export const useVendedores = () => {
 
   /**
    * Cargar vendedores y sus métricas desde el backend
+   * Nota: Obtiene TODOS los vendedores (activos e inactivos) para poder gestionar ambos
    */
   const fetchVendedores = useCallback(async () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     try {
-      // Obtener todos los usuarios con rol VENDEDOR
-      const usuarios = await usuarioService.getVendedores();
+      // Obtener todos los usuarios y filtrar solo VENDEDORES (incluyendo inactivos)
+      const todosLosUsuarios = await usuarioService.getAll();
+      const usuarios = todosLosUsuarios.filter(u => u.role === 'VENDEDOR');
+
+      console.log(`📊 Total vendedores (activos e inactivos): ${usuarios.length}`);
 
       // Para cada vendedor, obtener sus métricas
       const vendedoresConMetricas = await Promise.all(
@@ -51,8 +55,7 @@ export const useVendedores = () => {
               leadsConvertidos: metricas?.clientesConvertidos || 0,
               leadsInactivos: metricas?.leadsInactivos || 0,
               totalLeads: metricas?.totalLeads || 0,
-              tasaConversion: metricas?.tasaConversion || 0,
-              tiempoRespuestaPromedio: 0 // Puede venir de backend si se agrega
+              tasaConversion: metricas?.tasaConversion || 0
             };
           } catch (error) {
             console.error(`❌ Error obteniendo métricas para vendedor ${usuario.id}:`, error);
@@ -67,8 +70,7 @@ export const useVendedores = () => {
               leadsConvertidos: 0,
               leadsInactivos: 0,
               totalLeads: 0,
-              tasaConversion: 0,
-              tiempoRespuestaPromedio: 0
+              tasaConversion: 0
             };
           }
         })
@@ -183,11 +185,18 @@ export const useVendedores = () => {
     async (id: number): Promise<boolean> => {
       try {
         const vendedor = state.vendedores.find(v => v.id === id);
-        if (!vendedor) return false;
+        if (!vendedor) {
+          console.error(`❌ Vendedor ${id} no encontrado en el estado`);
+          return false;
+        }
 
+        console.log(`🔄 Actualizando vendedor ${id}...`);
+        
         const usuarioActualizado = await usuarioService.update(id, {
           activo: !vendedor.activo
         });
+
+        console.log(`✅ Respuesta del servidor:`, usuarioActualizado);
 
         // Actualizar en la lista
         setState(prev => ({
@@ -200,8 +209,8 @@ export const useVendedores = () => {
         console.log(`✅ Vendedor ${id} ${usuarioActualizado.activo ? 'activado' : 'desactivado'}`);
         return true;
       } catch (error) {
-        console.error('❌ Error al cambiar estado del vendedor:', error);
-        return false;
+        console.error(`❌ Error al cambiar estado del vendedor ${id}:`, error);
+        throw error;
       }
     },
     [state.vendedores]
