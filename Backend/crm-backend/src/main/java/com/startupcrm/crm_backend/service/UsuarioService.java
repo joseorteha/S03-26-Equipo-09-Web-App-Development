@@ -22,7 +22,7 @@ public class UsuarioService {
     }
 
     public List<Usuario> getVendedores() {
-        return usuarioRepository.findByRole(Usuario.Role.VENDEDOR);
+        return usuarioRepository.findByRoleAndActivo(Usuario.Role.VENDEDOR, true);
     }
 
     public Usuario getById(Long id) {

@@ -10,24 +10,41 @@ import { Card } from '../components/ui/Card/Card';
 import { Badge } from '../components/ui/Badge/Badge';
 import { Modal } from '../components/ui/Modal/Modal';
 
+interface MetricasVendedor {
+  vendedorId: number;
+  vendedorNombre: string;
+  leadsAsignados: number;
+  clientesConvertidos: number;
+  leadsInactivos: number;
+  totalLeads: number;
+  tasaConversion: number;
+}
+
 export const DashboardPage = () => {
   const navigate = useNavigate();
-  const { isVendedor, userName } = useAuth();
+  const { isVendedor, userName, userId } = useAuth();
   const [isDevelopmentModalOpen, setIsDevelopmentModalOpen] = useState(false);
   const [metricas, setMetricas] = useState<Metricas | null>(null);
+  const [metricasVendedor, setMetricasVendedor] = useState<MetricasVendedor | null>(null);
 
   useEffect(() => {
     const cargarMetricas = async () => {
       try {
-        // Solo cargar resumen (sin funnel que demora)
-        const metricsData = await metricasService.getResumen();
-        setMetricas(metricsData);
+        if (isVendedor && userId) {
+          // Cargar métricas específicas del vendedor
+          const metricsDataVendedor = await metricasService.getMetricasVendedor(userId);
+          setMetricasVendedor(metricsDataVendedor);
+        } else {
+          // Cargar resumen general (solo para admin)
+          const metricsData = await metricasService.getResumen();
+          setMetricas(metricsData);
+        }
       } catch (error) {
         console.error('Error cargando métricas:', error);
       }
     };
     cargarMetricas();
-  }, []);
+  }, [isVendedor, userId]);
 
   const mockStats = MOCK_DASHBOARD_STATS;
 
@@ -109,8 +126,14 @@ export const DashboardPage = () => {
               </div>
               <div>
                 <p className="text-sm text-slate-600 font-medium">Tasa Conversión</p>
-                <h3 className="text-3xl font-bold text-[#182442] mt-1">25%</h3>
-                <p className="text-xs text-slate-500 mt-1">Este mes (6/24 clientes ganados)</p>
+                <h3 className="text-3xl font-bold text-[#182442] mt-1">
+                  {metricasVendedor ? `${metricasVendedor.tasaConversion.toFixed(1)}%` : '0%'}
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  {metricasVendedor 
+                    ? `${metricasVendedor.clientesConvertidos}/${metricasVendedor.totalLeads} clientes ganados`
+                    : 'Cargando...'}
+                </p>
               </div>
             </div>
           </Card>

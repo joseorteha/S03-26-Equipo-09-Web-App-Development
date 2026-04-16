@@ -8,11 +8,15 @@ import com.startupcrm.crm_backend.model.Usuario;
 import com.startupcrm.crm_backend.repository.ContactoRepository;
 import com.startupcrm.crm_backend.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 @Service
 public class ContactoService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ContactoService.class);
 
     private final ContactoRepository contactoRepository;
     private final UsuarioRepository usuarioRepository;
@@ -34,6 +38,39 @@ public class ContactoService {
 
     public Contacto save(Contacto contacto) {
         return contactoRepository.save(contacto);
+    }
+
+    /**
+     * Guardar contacto desde DTO (usado al crear desde frontend)
+     * Resuelve automáticamente el vendedor si viene vendedorAsignadoId
+     */
+    public Contacto saveFromDTO(ContactoDTO dto) {
+        logger.info("🔍 saveFromDTO: Procesando DTO: nombre={}, email={}, vendedor={}", 
+            dto.getNombre(), dto.getEmail(), dto.getVendedorAsignadoId());
+        
+        Contacto contacto = new Contacto();
+        contacto.setNombre(dto.getNombre());
+        contacto.setEmail(dto.getEmail());
+        contacto.setTelefono(dto.getTelefono());
+        contacto.setEstado(dto.getEstado());
+
+        // Resolver vendedor asignado si viene en el DTO
+        if (dto.getVendedorAsignadoId() != null) {
+            logger.info("🔍 Buscando vendedor: {}", dto.getVendedorAsignadoId());
+            Usuario vendedor = usuarioRepository.findById(dto.getVendedorAsignadoId())
+                    .orElseThrow(() -> {
+                        logger.error("❌ Vendedor no encontrado: {}", dto.getVendedorAsignadoId());
+                        return new ResourceNotFoundException("Vendedor no encontrado con ID: " + dto.getVendedorAsignadoId());
+                    });
+            contacto.setVendedorAsignado(vendedor);
+            logger.info("✅ Vendedor asignado: {}", vendedor.getNombre());
+        } else {
+            logger.warn("⚠️ No hay vendedor asignado");
+        }
+
+        Contacto saved = contactoRepository.save(contacto);
+        logger.info("✅ Contacto guardado en BD: id={}", saved.getId());
+        return saved;
     }
 
     public Contacto update(Long id, ContactoDTO dto) {

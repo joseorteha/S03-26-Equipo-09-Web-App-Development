@@ -47,6 +47,10 @@ public class ContactoDTO {
 
     private Long vendedorAsignadoId; // ID del vendedor responsable
 
+    // Información del vendedor (para mostrar en frontend)
+    private String vendedorNombre;
+    private String vendedorEmail;
+
     /**
      * ELIMINADAS de este DTO (MVP):
      * - List<ConversacionDTO> conversaciones

@@ -1,54 +1,82 @@
 import { useState, useEffect } from 'react';
 import { contactoService, Contacto, estadoLabels } from '../../../common/apiClient';
+import { useAuth } from '../../../hooks/useAuth';
 import { Card } from '../../../components/ui/Card/Card';
 import { Badge } from '../../../components/ui/Badge/Badge';
 
 interface ContactoTableProps {
-  filtroEstado?: 'lead-activo' | 'cliente' | 'inactivo';
+  filtroEstado?: 'todos' | 'lead-activo' | 'cliente' | 'inactivo';
   filtroVendedor?: string;
+  refreshTrigger?: number;
 }
 
-export const ContactoTable = ({ filtroEstado = 'lead-activo', filtroVendedor }: ContactoTableProps) => {
-  const [contactos, setContactos] = useState<Contacto[]>([]);
+export const ContactoTable = ({ filtroEstado = 'todos', filtroVendedor, refreshTrigger }: ContactoTableProps) => {
+  const { isVendedor, userId } = useAuth();
+  const [contactosTodos, setContactosTodos] = useState<Contacto[]>([]);
+  const [contactosFiltrados, setContactosFiltrados] = useState<Contacto[]>([]);
   const [cargando, setCargando] = useState(false);
 
+  // Cargar todos los datos al montarse
   useEffect(() => {
-    cargarContactos();
-  }, [filtroEstado, filtroVendedor]);
+    cargarTodosContactos();
+  }, [isVendedor, userId]);
 
-  const cargarContactos = async () => {
+  // Recargar cuando refreshTrigger cambia (después de crear un lead)
+  useEffect(() => {
+    if (refreshTrigger !== undefined) {
+      cargarTodosContactos();
+    }
+  }, [refreshTrigger]);
+
+  // Filtrar por estado y vendedor cuando cambian
+  useEffect(() => {
+    filtrarContactos();
+  }, [filtroEstado, filtroVendedor, contactosTodos]);
+
+  const cargarTodosContactos = async () => {
     setCargando(true);
     try {
       let datos: Contacto[] = [];
-      const vendedorId = filtroVendedor ? parseInt(filtroVendedor) : null;
 
-      if (vendedorId) {
-        // Filtrado por vendedor específico
-        if (filtroEstado === 'lead-activo') {
-          datos = await contactoService.getLeadsActivosByVendedor(vendedorId);
-        } else if (filtroEstado === 'cliente') {
-          datos = await contactoService.getClientesByVendedor(vendedorId);
-        } else if (filtroEstado === 'inactivo') {
-          datos = await contactoService.getInactivosByVendedor(vendedorId);
-        }
+      // Si es vendedor: cargar solo sus leads
+      if (isVendedor && userId) {
+        datos = await contactoService.getByVendedor(userId);
       } else {
-        // Filtrado global (sin filtro de vendedor)
-        if (filtroEstado === 'lead-activo') {
-          datos = await contactoService.getLeadsActivos();
-        } else if (filtroEstado === 'cliente') {
-          datos = await contactoService.getClientes();
-        } else if (filtroEstado === 'inactivo') {
-          datos = await contactoService.getInactivos();
-        }
+        // Si es admin: cargar todos los leads
+        datos = await contactoService.getAll();
       }
 
-      setContactos(datos);
+      setContactosTodos(datos);
     } catch (error) {
       console.error('Error cargando contactos:', error);
-      setContactos([]);
+      setContactosTodos([]);
     } finally {
       setCargando(false);
     }
+  };
+
+  const filtrarContactos = () => {
+    let resultado = [...contactosTodos];
+
+    // Filtrar por estado/etiqueta (solo si no es 'todos')
+    if (filtroEstado === 'lead-activo') {
+      resultado = resultado.filter(c => c.estado === 'LEAD_ACTIVO');
+    } else if (filtroEstado === 'cliente') {
+      resultado = resultado.filter(c => c.estado === 'CLIENTE');
+    } else if (filtroEstado === 'inactivo') {
+      resultado = resultado.filter(c => c.estado === 'INACTIVO');
+    }
+    // Si filtroEstado === 'todos', no filtrar por estado, mostrar todos
+
+    // Filtrar por vendedor (solo aplica para admin)
+    if (filtroVendedor && !isVendedor) {
+      const vendedorId = parseInt(filtroVendedor);
+      console.log(`🔍 Filtrando por vendedor: ${vendedorId}, leads totales: ${resultado.length}`);
+      resultado = resultado.filter(c => c.vendedorAsignadoId === vendedorId);
+      console.log(`✅ Leads después de filtro: ${resultado.length}`);
+    }
+
+    setContactosFiltrados(resultado);
   };
 
   const getEstadoBadgeColor = (estado: string) => {
@@ -69,8 +97,8 @@ export const ContactoTable = ({ filtroEstado = 'lead-activo', filtroVendedor }: 
     <Card>
       <div className="space-y-4">
         {cargando ? (
-          <div className="text-center py-8 text-on-surface-variant">Cargando...</div>
-        ) : contactos.length === 0 ? (
+          <div className="text-center py-8 text-on-surface-variant">Cargando leads...</div>
+        ) : contactosFiltrados.length === 0 ? (
           <div className="text-center py-8 text-on-surface-variant">
             No hay leads disponibles en esta categoría
           </div>
@@ -86,7 +114,7 @@ export const ContactoTable = ({ filtroEstado = 'lead-activo', filtroVendedor }: 
                 </tr>
               </thead>
               <tbody>
-                {contactos.map((contacto) => (
+                {contactosFiltrados.map((contacto) => (
                   <tr key={contacto.id} className="border-b border-outline/30 hover:bg-surface-container-low transition-colors">
                     <td className="py-3 px-4 font-medium">{contacto.nombre}</td>
                     <td className="py-3 px-4 text-on-surface-variant">{contacto.email}</td>
@@ -101,7 +129,7 @@ export const ContactoTable = ({ filtroEstado = 'lead-activo', filtroVendedor }: 
               </tbody>
             </table>
             <div className="mt-4 p-3 bg-surface-container-low rounded text-sm text-on-surface-variant">
-              Total: <span className="font-semibold text-primary">{contactos.length}</span> leads
+              Total: <span className="font-semibold text-primary">{contactosFiltrados.length}</span> leads
             </div>
           </div>
         )}

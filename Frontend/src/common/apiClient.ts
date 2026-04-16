@@ -11,7 +11,15 @@ export interface Contacto {
   nombre: string;
   email: string;
   telefono: string;
-  estado: 'LEAD_ACTIVO' | 'EN_SEGUIMIENTO' | 'CALIFICADO' | 'CLIENTE';
+  estado: 'LEAD_ACTIVO' | 'EN_SEGUIMIENTO' | 'CALIFICADO' | 'CLIENTE' | 'INACTIVO';
+  vendedorAsignado?: {
+    id: number;
+    nombre: string;
+    email: string;
+  };
+  vendedorAsignadoId?: number;
+  vendedorNombre?: string;
+  vendedorEmail?: string;
 }
 
 export interface Conversacion {
@@ -86,13 +94,26 @@ export const contactoService = {
   },
 
   // Crear contacto
-  create: async (contacto: Omit<Contacto, 'id'>): Promise<Contacto> => {
+  create: async (contacto: { nombre: string; email: string; telefono: string; estado: string; vendedorAsignadoId?: number }): Promise<Contacto> => {
     const response = await fetch(`${API_BASE_URL}/contactos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(contacto)
     });
+    
     const data = (await response.json()) as ApiResponse<Contacto>;
+    
+    if (!response.ok) {
+      // Si hay error en validación de campos
+      if (data.data && typeof data.data === 'object' && !Array.isArray(data.data) && 'id' !in data.data) {
+        const validationErrors = Object.entries(data.data as Record<string, string>)
+          .map(([field, msg]) => `${field}: ${msg}`)
+          .join('\n');
+        throw new Error(validationErrors || 'Error de validación en la creación');
+      }
+      throw new Error(data.error || 'Error al crear el contacto');
+    }
+    
     return data.data || { id: 0, nombre: '', email: '', telefono: '', estado: 'LEAD_ACTIVO' };
   },
 
@@ -308,6 +329,44 @@ export const metricasService = {
     const response = await fetch(`${API_BASE_URL}/metricas/canales`);
     const data = (await response.json()) as ApiResponse<unknown>;
     return data.data;
+  },
+
+  /**
+   * Obtener métricas de conversión para un vendedor específico
+   * Retorna: tasaConversion, leadsAsignados, clientesConvertidos, totalLeads
+   */
+  getMetricasVendedor: async (vendedorId: number) => {
+    const response = await fetch(`${API_BASE_URL}/metricas/vendedor/${vendedorId}`);
+    const data = (await response.json()) as ApiResponse<{
+      vendedorId: number;
+      vendedorNombre: string;
+      leadsAsignados: number;
+      clientesConvertidos: number;
+      leadsInactivos: number;
+      totalLeads: number;
+      tasaConversion: number;
+    }>;
+    return data.data;
+  },
+
+  /**
+   * Obtener métricas de todos los vendedores activos
+   * Retorna: Array de vendedores con sus tasas de conversión
+   */
+  getMetricasTodosVendedores: async () => {
+    const response = await fetch(`${API_BASE_URL}/metricas/vendedores`);
+    const data = (await response.json()) as ApiResponse<
+      Array<{
+        vendedorId: number;
+        vendedorNombre: string;
+        leadsAsignados: number;
+        clientesConvertidos: number;
+        leadsInactivos: number;
+        totalLeads: number;
+        tasaConversion: number;
+      }>
+    >;
+    return data.data || [];
   }
 };
 

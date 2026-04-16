@@ -30,6 +30,16 @@ public class ContactoMapper {
                         ? contacto.getVendedorAsignado().getId() 
                         : null
                 )
+                .vendedorNombre(
+                    contacto.getVendedorAsignado() != null
+                        ? contacto.getVendedorAsignado().getNombre()
+                        : null
+                )
+                .vendedorEmail(
+                    contacto.getVendedorAsignado() != null
+                        ? contacto.getVendedorAsignado().getEmail()
+                        : null
+                )
                 .build();
         
         /**

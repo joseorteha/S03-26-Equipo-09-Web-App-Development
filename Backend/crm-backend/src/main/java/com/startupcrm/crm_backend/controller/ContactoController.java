@@ -11,12 +11,16 @@ import com.startupcrm.crm_backend.service.ContactoService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/contactos")
 public class ContactoController {
+
+    private static final Logger logger = LoggerFactory.getLogger(ContactoController.class);
 
     private final ContactoService contactoService;
 
@@ -60,9 +64,18 @@ public class ContactoController {
 
     @PostMapping
     public ApiResponse<ContactoDTO> create(@Valid @RequestBody ContactoDTO dto) {
-        Contacto contacto = ContactoMapper.toEntity(dto);
-        Contacto saved = contactoService.save(contacto);
-        return new ApiResponse<>(true, ContactoMapper.toDTO(saved), null);
+        try {
+            logger.info("📝 Creando nuevo contacto: nombre={}, email={}, vendedor={}", 
+                dto.getNombre(), dto.getEmail(), dto.getVendedorAsignadoId());
+            
+            Contacto saved = contactoService.saveFromDTO(dto);
+            
+            logger.info("✅ Contacto creado exitosamente: id={}, nombre={}", saved.getId(), saved.getNombre());
+            return new ApiResponse<>(true, ContactoMapper.toDTO(saved), null);
+        } catch (Exception e) {
+            logger.error("❌ Error creando contacto: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     /*@PutMapping("/{id}")
